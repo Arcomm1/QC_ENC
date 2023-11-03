@@ -1,0 +1,1 @@
+ALTER TABLE `asterisk`.`qc_users` ADD COLUMN `full_name` VARCHAR(255) DEFAULT NULL COMMENT '';

@@ -1,0 +1,1 @@
+ALTER TABLE `qc_users` ADD COLUMN `show_names` varchar(3) COLLATE utf8_unicode_ci DEFAULT 'no';
