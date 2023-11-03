@@ -64,9 +64,8 @@ echo ""
 echo "Retrieving FreePBX configuration"
 echo "================================================================================"
 
-
-AMPDBUSER=`cat /etc/amportal.conf | grep AMPDBUSER | tr '=' ' '| gawk '{print $2}'`
-AMPDBPASS=`cat /etc/amportal.conf | grep AMPDBPASS | tr '=' ' '| gawk '{print $2}'`
+AMPDBUSER=`cat /etc/freepbx.conf | grep AMPDBUSER | tr '=' ' ' | tr -d '"' | tr -d "'" | tr -d ';' | gawk '{print $2}'`
+AMPDBPASS=`cat /etc/freepbx.conf | grep AMPDBPASS | tr '=' ' ' | tr -d '"' | tr -d "'" | tr -d ';' | gawk '{print $2}'`
 
 
 echo ""
