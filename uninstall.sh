@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-# QuickCDR uninstall script 1
+# QuickCDR uninstall script
 
 
 if [[ $EUID -ne 0 ]]; then
