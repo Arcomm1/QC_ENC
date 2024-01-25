@@ -1,202 +1,110 @@
-<?php
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-
-class Tools extends CI_Controller
-{
-
-    public function __construct()
-    {
-        parent::__construct();
-
-        if (!is_cli()) {
-            die("No direct script access allowed");
-        }
-
-        echo "QuickCDR Management Sctipt\n";
-    }
-
-
-    public function user_create($name = false, $password = false, $role = false)
-    {
-        if (!$name || !$password || !$role) {
-            echo "Invalid arguments!\n";
-            echo "USAGE: user_create USERNAME PASSWORD ROLE\n";
-            exit(0);
-        }
-
-        if ($this->User_model->exists_by('name', $name)) {
-            echo "User with same name already exists!\n";
-            exit();
-        }
-
-        $id = $this->User_model->create(
-            array(
-                'name'      => $name,
-                'password'  => md5($password),
-                'role'      => $role
-            )
-        );
-
-        if ($id) {
-            echo "User with ID ".$id." created successfuly!\n";
-        } else {
-            echo "Could not create user!\n";
-        }
-    }
-
-
-    public function user_delete($name = false)
-    {
-        if (!$name) {
-            echo "Invalid arguments!\n";
-            echo "USAGE: user_delete USERNAME\n";
-            exit(0);
-        }
-
-        if ($name == 'admin') {
-            echo "Can not delete Administrative user!\n";
-            exit();
-        }
-
-        $user = $this->User_model->get_by('name', $name);
-
-        if ($user) {
-            foreach ($this->User_model->get_devices($user->id) as $d) {
-                $this->User_model->remove_device($user->id, $d->id);
-            }
-        }
-
-        $this->User_model->delete_by('name', $name);
-
-        echo "User with ".$name." deleted successfuly!\n";
-    }
-
-
-    public function user_list()
-    {
-        echo "Current user list:\n";
-        $mask = "|%5.5s |%-30.30s |%-30.30s\n";
-        printf($mask, 'ID', 'USERNAME', 'ROLE');
-        foreach ($this->User_model->get_all() as $u) {
-            printf($mask, $u->id, $u->name, $u->role);
-        }
-    }
-
-
-    public function user_device_add($name = false, $device_id = false)
-    {
-        if (!$name || !$device_id) {
-            echo "Invalid arguments!\n";
-            echo "USAGE: user_device_add USERNAME DEVICE\n";
-            exit(0);
-        }
-
-        if (!is_numeric($device_id)) {
-            echo "Device is not correct. Device should be numeric!\n";
-            exit(0);
-        }
-
-        $user = $this->User_model->get_by('name', $name);
-
-        if (!$user) {
-            echo "User ".$name." does not exist!\n";
-            exit();
-        }
-
-        $this->User_model->add_device($user->id, $device_id);
-        echo "Successfuly added device ".$device_id." to user ".$name."\n!";
-    }
-
-
-    public function user_device_remove($name = false, $device_id = false)
-    {
-        if (!$name || !$device_id) {
-            echo "Invalid arguments!\n";
-            echo "USAGE: user_device_remove USERNAME DEVICE\n";
-            exit(0);
-        }
-
-        if (!is_numeric($device_id)) {
-            echo "Device is not correct. Device should be numeric!\n";
-            exit(0);
-        }
-
-        if (!$this->Device_model->exists($device_id)) {
-            echo "Device ".$device_id." does not exist!\n";
-            exit(0);
-        }
-
-        $user = $this->User_model->get_by('name', $name);
-
-        if (!$user) {
-            echo "User ".$name." does not exist!\n";
-            exit();
-        }
-
-        $this->User_model->remove_device($user->id, $device_id);
-        echo "Successfuly removed device ".$device_id." from user ".$name."\n!";
-    }
-
-
-    public function user_device_list($name = false)
-    {
-        if (!$name) {
-            echo "Invalid arguments!\n";
-            echo "USAGE: user_device_list USERNAME\n";
-            exit(0);
-        }
-
-        $user = $this->User_model->get_by('name', $name);
-
-        if (!$user) {
-            echo "User ".$name." does not exist!\n";
-            exit();
-        }
-
-        echo "Current device list for user ".$name.":\n";
-        $mask = "|%20.20s |%-30.30s\n";
-        printf($mask, 'EXTENSION', 'DESCRIPTION');
-        foreach ($this->User_model->get_devices($user->id) as $d) {
-            printf($mask, $d->id, $d->description);
-        }
-    }
-
-
-    public function device_list()
-    {
-        echo "Current device list:\n";
-        $mask = "|%20.20s |%-30.30s\n";
-        printf($mask, 'EXTENSION', 'DESCRIPTION');
-        foreach ($this->Device_model->get_all() as $d) {
-            printf($mask, $d->id, $d->description);
-        }
-    }
-
-
-    public function user_device_alias_add($name = false, $device_id = false, $alias = false)
-    {
-        if (!$name || !$device_id || !$alias) {
-            echo "Invalid arguments!\n";
-            echo "USAGE: user_device_add USERNAME DEVICE ALIAS\n";
-            exit(0);
-        }
-
-        if (!is_numeric($device_id)) {
-            echo "Device is not correct. Device should be numeric!\n";
-            exit(0);
-        }
-
-        $user = $this->User_model->get_by('name', $name);
-
-        if (!$user) {
-            echo "User ".$name." does not exist!\n";
-            exit();
-        }
-
-        $this->User_model->add_device_alias($user->id, $device_id, $alias);
-        echo "Successfuly added device alias ".$device_id." > ".$alias." to user ".$name."\n";
-    }
-
-
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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

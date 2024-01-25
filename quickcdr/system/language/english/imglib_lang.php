@@ -1,57 +1,69 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
- * @license	https://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 1.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-$lang['imglib_source_image_required'] = 'You must specify a source image in your preferences.';
-$lang['imglib_gd_required'] = 'The GD image library is required for this feature.';
-$lang['imglib_gd_required_for_props'] = 'Your server must support the GD image library in order to determine the image properties.';
-$lang['imglib_unsupported_imagecreate'] = 'Your server does not support the GD function required to process this type of image.';
-$lang['imglib_gif_not_supported'] = 'GIF images are often not supported due to licensing restrictions. You may have to use JPG or PNG images instead.';
-$lang['imglib_jpg_not_supported'] = 'JPG images are not supported.';
-$lang['imglib_png_not_supported'] = 'PNG images are not supported.';
-$lang['imglib_jpg_or_png_required'] = 'The image resize protocol specified in your preferences only works with JPEG or PNG image types.';
-$lang['imglib_copy_error'] = 'An error was encountered while attempting to replace the file. Please make sure your file directory is writable.';
-$lang['imglib_rotate_unsupported'] = 'Image rotation does not appear to be supported by your server.';
-$lang['imglib_libpath_invalid'] = 'The path to your image library is not correct. Please set the correct path in your image preferences.';
-$lang['imglib_image_process_failed'] = 'Image processing failed. Please verify that your server supports the chosen protocol and that the path to your image library is correct.';
-$lang['imglib_rotation_angle_required'] = 'An angle of rotation is required to rotate the image.';
-$lang['imglib_invalid_path'] = 'The path to the image is not correct.';
-$lang['imglib_invalid_image'] = 'The provided image is not valid.';
-$lang['imglib_copy_failed'] = 'The image copy routine failed.';
-$lang['imglib_missing_font'] = 'Unable to find a font to use.';
-$lang['imglib_save_failed'] = 'Unable to save the image. Please make sure the image and file directory are writable.';
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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

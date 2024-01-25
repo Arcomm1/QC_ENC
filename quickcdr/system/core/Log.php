@@ -1,296 +1,118 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
- * @license	https://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 1.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * Logging Class
- *
- * @package		CodeIgniter
- * @subpackage	Libraries
- * @category	Logging
- * @author		EllisLab Dev Team
- * @link		https://codeigniter.com/user_guide/general/errors.html
- */
-class CI_Log {
-
-	/**
-	 * Path to save log files
-	 *
-	 * @var string
-	 */
-	protected $_log_path;
-
-	/**
-	 * File permissions
-	 *
-	 * @var	int
-	 */
-	protected $_file_permissions = 0644;
-
-	/**
-	 * Level of logging
-	 *
-	 * @var int
-	 */
-	protected $_threshold = 1;
-
-	/**
-	 * Array of threshold levels to log
-	 *
-	 * @var array
-	 */
-	protected $_threshold_array = array();
-
-	/**
-	 * Format of timestamp for log files
-	 *
-	 * @var string
-	 */
-	protected $_date_fmt = 'Y-m-d H:i:s';
-
-	/**
-	 * Filename extension
-	 *
-	 * @var	string
-	 */
-	protected $_file_ext;
-
-	/**
-	 * Whether or not the logger can write to the log files
-	 *
-	 * @var bool
-	 */
-	protected $_enabled = TRUE;
-
-	/**
-	 * Predefined logging levels
-	 *
-	 * @var array
-	 */
-	protected $_levels = array('ERROR' => 1, 'DEBUG' => 2, 'INFO' => 3, 'ALL' => 4);
-
-	/**
-	 * mbstring.func_overload flag
-	 *
-	 * @var	bool
-	 */
-	protected static $func_overload;
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Class constructor
-	 *
-	 * @return	void
-	 */
-	public function __construct()
-	{
-		$config =& get_config();
-
-		isset(self::$func_overload) OR self::$func_overload = (extension_loaded('mbstring') && ini_get('mbstring.func_overload'));
-
-		$this->_log_path = ($config['log_path'] !== '') ? $config['log_path'] : APPPATH.'logs/';
-		$this->_file_ext = (isset($config['log_file_extension']) && $config['log_file_extension'] !== '')
-			? ltrim($config['log_file_extension'], '.') : 'php';
-
-		file_exists($this->_log_path) OR mkdir($this->_log_path, 0755, TRUE);
-
-		if ( ! is_dir($this->_log_path) OR ! is_really_writable($this->_log_path))
-		{
-			$this->_enabled = FALSE;
-		}
-
-		if (is_numeric($config['log_threshold']))
-		{
-			$this->_threshold = (int) $config['log_threshold'];
-		}
-		elseif (is_array($config['log_threshold']))
-		{
-			$this->_threshold = 0;
-			$this->_threshold_array = array_flip($config['log_threshold']);
-		}
-
-		if ( ! empty($config['log_date_format']))
-		{
-			$this->_date_fmt = $config['log_date_format'];
-		}
-
-		if ( ! empty($config['log_file_permissions']) && is_int($config['log_file_permissions']))
-		{
-			$this->_file_permissions = $config['log_file_permissions'];
-		}
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Write Log File
-	 *
-	 * Generally this function will be called using the global log_message() function
-	 *
-	 * @param	string	$level 	The error level: 'error', 'debug' or 'info'
-	 * @param	string	$msg 	The error message
-	 * @return	bool
-	 */
-	public function write_log($level, $msg)
-	{
-		if ($this->_enabled === FALSE)
-		{
-			return FALSE;
-		}
-
-		$level = strtoupper($level);
-
-		if (( ! isset($this->_levels[$level]) OR ($this->_levels[$level] > $this->_threshold))
-			&& ! isset($this->_threshold_array[$this->_levels[$level]]))
-		{
-			return FALSE;
-		}
-
-		$filepath = $this->_log_path.'log-'.date('Y-m-d').'.'.$this->_file_ext;
-		$message = '';
-
-		if ( ! file_exists($filepath))
-		{
-			$newfile = TRUE;
-			// Only add protection to php files
-			if ($this->_file_ext === 'php')
-			{
-				$message .= "<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>\n\n";
-			}
-		}
-
-		if ( ! $fp = @fopen($filepath, 'ab'))
-		{
-			return FALSE;
-		}
-
-		flock($fp, LOCK_EX);
-
-		// Instantiating DateTime with microseconds appended to initial date is needed for proper support of this format
-		if (strpos($this->_date_fmt, 'u') !== FALSE)
-		{
-			$microtime_full = microtime(TRUE);
-			$microtime_short = sprintf("%06d", ($microtime_full - floor($microtime_full)) * 1000000);
-			$date = new DateTime(date('Y-m-d H:i:s.'.$microtime_short, $microtime_full));
-			$date = $date->format($this->_date_fmt);
-		}
-		else
-		{
-			$date = date($this->_date_fmt);
-		}
-
-		$message .= $this->_format_line($level, $date, $msg);
-
-		for ($written = 0, $length = self::strlen($message); $written < $length; $written += $result)
-		{
-			if (($result = fwrite($fp, self::substr($message, $written))) === FALSE)
-			{
-				break;
-			}
-		}
-
-		flock($fp, LOCK_UN);
-		fclose($fp);
-
-		if (isset($newfile) && $newfile === TRUE)
-		{
-			chmod($filepath, $this->_file_permissions);
-		}
-
-		return is_int($result);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Format the log line.
-	 *
-	 * This is for extensibility of log formatting
-	 * If you want to change the log format, extend the CI_Log class and override this method
-	 *
-	 * @param	string	$level 	The error level
-	 * @param	string	$date 	Formatted date string
-	 * @param	string	$message 	The log message
-	 * @return	string	Formatted log line with a new line character '\n' at the end
-	 */
-	protected function _format_line($level, $date, $message)
-	{
-		return $level.' - '.$date.' --> '.$message."\n";
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Byte-safe strlen()
-	 *
-	 * @param	string	$str
-	 * @return	int
-	 */
-	protected static function strlen($str)
-	{
-		return (self::$func_overload)
-			? mb_strlen($str, '8bit')
-			: strlen($str);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Byte-safe substr()
-	 *
-	 * @param	string	$str
-	 * @param	int	$start
-	 * @param	int	$length
-	 * @return	string
-	 */
-	protected static function substr($str, $start, $length = NULL)
-	{
-		if (self::$func_overload)
-		{
-			// mb_substr($str, $start, null, '8bit') returns an empty
-			// string on PHP 5.3
-			isset($length) OR $length = ($start >= 0 ? self::strlen($str) - $start : -$start);
-			return mb_substr($str, $start, $length, '8bit');
-		}
-
-		return isset($length)
-			? substr($str, $start, $length)
-			: substr($str, $start);
-	}
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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
+4GTp8NHVY8LsENOunR6H7nIT

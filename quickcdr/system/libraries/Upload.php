@@ -1,1326 +1,409 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
- * @license	https://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 1.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * File Uploading Class
- *
- * @package		CodeIgniter
- * @subpackage	Libraries
- * @category	Uploads
- * @author		EllisLab Dev Team
- * @link		https://codeigniter.com/user_guide/libraries/file_uploading.html
- */
-class CI_Upload {
-
-	/**
-	 * Maximum file size
-	 *
-	 * @var	int
-	 */
-	public $max_size = 0;
-
-	/**
-	 * Maximum image width
-	 *
-	 * @var	int
-	 */
-	public $max_width = 0;
-
-	/**
-	 * Maximum image height
-	 *
-	 * @var	int
-	 */
-	public $max_height = 0;
-
-	/**
-	 * Minimum image width
-	 *
-	 * @var	int
-	 */
-	public $min_width = 0;
-
-	/**
-	 * Minimum image height
-	 *
-	 * @var	int
-	 */
-	public $min_height = 0;
-
-	/**
-	 * Maximum filename length
-	 *
-	 * @var	int
-	 */
-	public $max_filename = 0;
-
-	/**
-	 * Maximum duplicate filename increment ID
-	 *
-	 * @var	int
-	 */
-	public $max_filename_increment = 100;
-
-	/**
-	 * Allowed file types
-	 *
-	 * @var	string
-	 */
-	public $allowed_types = '';
-
-	/**
-	 * Temporary filename
-	 *
-	 * @var	string
-	 */
-	public $file_temp = '';
-
-	/**
-	 * Filename
-	 *
-	 * @var	string
-	 */
-	public $file_name = '';
-
-	/**
-	 * Original filename
-	 *
-	 * @var	string
-	 */
-	public $orig_name = '';
-
-	/**
-	 * File type
-	 *
-	 * @var	string
-	 */
-	public $file_type = '';
-
-	/**
-	 * File size
-	 *
-	 * @var	int
-	 */
-	public $file_size = NULL;
-
-	/**
-	 * Filename extension
-	 *
-	 * @var	string
-	 */
-	public $file_ext = '';
-
-	/**
-	 * Force filename extension to lowercase
-	 *
-	 * @var	string
-	 */
-	public $file_ext_tolower = FALSE;
-
-	/**
-	 * Upload path
-	 *
-	 * @var	string
-	 */
-	public $upload_path = '';
-
-	/**
-	 * Overwrite flag
-	 *
-	 * @var	bool
-	 */
-	public $overwrite = FALSE;
-
-	/**
-	 * Obfuscate filename flag
-	 *
-	 * @var	bool
-	 */
-	public $encrypt_name = FALSE;
-
-	/**
-	 * Is image flag
-	 *
-	 * @var	bool
-	 */
-	public $is_image = FALSE;
-
-	/**
-	 * Image width
-	 *
-	 * @var	int
-	 */
-	public $image_width = NULL;
-
-	/**
-	 * Image height
-	 *
-	 * @var	int
-	 */
-	public $image_height = NULL;
-
-	/**
-	 * Image type
-	 *
-	 * @var	string
-	 */
-	public $image_type = '';
-
-	/**
-	 * Image size string
-	 *
-	 * @var	string
-	 */
-	public $image_size_str = '';
-
-	/**
-	 * Error messages list
-	 *
-	 * @var	array
-	 */
-	public $error_msg = array();
-
-	/**
-	 * Remove spaces flag
-	 *
-	 * @var	bool
-	 */
-	public $remove_spaces = TRUE;
-
-	/**
-	 * MIME detection flag
-	 *
-	 * @var	bool
-	 */
-	public $detect_mime = TRUE;
-
-	/**
-	 * XSS filter flag
-	 *
-	 * @var	bool
-	 */
-	public $xss_clean = FALSE;
-
-	/**
-	 * Apache mod_mime fix flag
-	 *
-	 * @var	bool
-	 */
-	public $mod_mime_fix = TRUE;
-
-	/**
-	 * Temporary filename prefix
-	 *
-	 * @var	string
-	 */
-	public $temp_prefix = 'temp_file_';
-
-	/**
-	 * Filename sent by the client
-	 *
-	 * @var	bool
-	 */
-	public $client_name = '';
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Filename override
-	 *
-	 * @var	string
-	 */
-	protected $_file_name_override = '';
-
-	/**
-	 * MIME types list
-	 *
-	 * @var	array
-	 */
-	protected $_mimes = array();
-
-	/**
-	 * CI Singleton
-	 *
-	 * @var	object
-	 */
-	protected $_CI;
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Constructor
-	 *
-	 * @param	array	$config
-	 * @return	void
-	 */
-	public function __construct($config = array())
-	{
-		empty($config) OR $this->initialize($config, FALSE);
-
-		$this->_mimes =& get_mimes();
-		$this->_CI =& get_instance();
-
-		log_message('info', 'Upload Class Initialized');
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Initialize preferences
-	 *
-	 * @param	array	$config
-	 * @param	bool	$reset
-	 * @return	CI_Upload
-	 */
-	public function initialize(array $config = array(), $reset = TRUE)
-	{
-		$reflection = new ReflectionClass($this);
-
-		if ($reset === TRUE)
-		{
-			$defaults = $reflection->getDefaultProperties();
-			foreach (array_keys($defaults) as $key)
-			{
-				if ($key[0] === '_')
-				{
-					continue;
-				}
-
-				if (isset($config[$key]))
-				{
-					if ($reflection->hasMethod('set_'.$key))
-					{
-						$this->{'set_'.$key}($config[$key]);
-					}
-					else
-					{
-						$this->$key = $config[$key];
-					}
-				}
-				else
-				{
-					$this->$key = $defaults[$key];
-				}
-			}
-		}
-		else
-		{
-			foreach ($config as $key => &$value)
-			{
-				if ($key[0] !== '_' && $reflection->hasProperty($key))
-				{
-					if ($reflection->hasMethod('set_'.$key))
-					{
-						$this->{'set_'.$key}($value);
-					}
-					else
-					{
-						$this->$key = $value;
-					}
-				}
-			}
-		}
-
-		// if a file_name was provided in the config, use it instead of the user input
-		// supplied file name for all uploads until initialized again
-		$this->_file_name_override = $this->file_name;
-		return $this;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Perform the file upload
-	 *
-	 * @param	string	$field
-	 * @return	bool
-	 */
-	public function do_upload($field = 'userfile')
-	{
-		// Is $_FILES[$field] set? If not, no reason to continue.
-		if (isset($_FILES[$field]))
-		{
-			$_file = $_FILES[$field];
-		}
-		// Does the field name contain array notation?
-		elseif (($c = preg_match_all('/(?:^[^\[]+)|\[[^]]*\]/', $field, $matches)) > 1)
-		{
-			$_file = $_FILES;
-			for ($i = 0; $i < $c; $i++)
-			{
-				// We can't track numeric iterations, only full field names are accepted
-				if (($field = trim($matches[0][$i], '[]')) === '' OR ! isset($_file[$field]))
-				{
-					$_file = NULL;
-					break;
-				}
-
-				$_file = $_file[$field];
-			}
-		}
-
-		if ( ! isset($_file))
-		{
-			$this->set_error('upload_no_file_selected', 'debug');
-			return FALSE;
-		}
-
-		// Is the upload path valid?
-		if ( ! $this->validate_upload_path())
-		{
-			// errors will already be set by validate_upload_path() so just return FALSE
-			return FALSE;
-		}
-
-		// Was the file able to be uploaded? If not, determine the reason why.
-		if ( ! is_uploaded_file($_file['tmp_name']))
-		{
-			$error = isset($_file['error']) ? $_file['error'] : 4;
-
-			switch ($error)
-			{
-				case UPLOAD_ERR_INI_SIZE:
-					$this->set_error('upload_file_exceeds_limit', 'info');
-					break;
-				case UPLOAD_ERR_FORM_SIZE:
-					$this->set_error('upload_file_exceeds_form_limit', 'info');
-					break;
-				case UPLOAD_ERR_PARTIAL:
-					$this->set_error('upload_file_partial', 'debug');
-					break;
-				case UPLOAD_ERR_NO_FILE:
-					$this->set_error('upload_no_file_selected', 'debug');
-					break;
-				case UPLOAD_ERR_NO_TMP_DIR:
-					$this->set_error('upload_no_temp_directory', 'error');
-					break;
-				case UPLOAD_ERR_CANT_WRITE:
-					$this->set_error('upload_unable_to_write_file', 'error');
-					break;
-				case UPLOAD_ERR_EXTENSION:
-					$this->set_error('upload_stopped_by_extension', 'debug');
-					break;
-				default:
-					$this->set_error('upload_no_file_selected', 'debug');
-					break;
-			}
-
-			return FALSE;
-		}
-
-		// Set the uploaded data as class variables
-		$this->file_temp = $_file['tmp_name'];
-		$this->file_size = $_file['size'];
-
-		// Skip MIME type detection?
-		if ($this->detect_mime !== FALSE)
-		{
-			$this->_file_mime_type($_file);
-		}
-
-		$this->file_type = preg_replace('/^(.+?);.*$/', '\\1', $this->file_type);
-		$this->file_type = strtolower(trim(stripslashes($this->file_type), '"'));
-		$this->file_name = $this->_prep_filename($_file['name']);
-		$this->file_ext	 = $this->get_extension($this->file_name);
-		$this->client_name = $this->file_name;
-
-		// Is the file type allowed to be uploaded?
-		if ( ! $this->is_allowed_filetype())
-		{
-			$this->set_error('upload_invalid_filetype', 'debug');
-			return FALSE;
-		}
-
-		// if we're overriding, let's now make sure the new name and type is allowed
-		if ($this->_file_name_override !== '')
-		{
-			$this->file_name = $this->_prep_filename($this->_file_name_override);
-
-			// If no extension was provided in the file_name config item, use the uploaded one
-			if (strpos($this->_file_name_override, '.') === FALSE)
-			{
-				$this->file_name .= $this->file_ext;
-			}
-			else
-			{
-				// An extension was provided, let's have it!
-				$this->file_ext	= $this->get_extension($this->_file_name_override);
-			}
-
-			if ( ! $this->is_allowed_filetype(TRUE))
-			{
-				$this->set_error('upload_invalid_filetype', 'debug');
-				return FALSE;
-			}
-		}
-
-		// Convert the file size to kilobytes
-		if ($this->file_size > 0)
-		{
-			$this->file_size = round($this->file_size/1024, 2);
-		}
-
-		// Is the file size within the allowed maximum?
-		if ( ! $this->is_allowed_filesize())
-		{
-			$this->set_error('upload_invalid_filesize', 'info');
-			return FALSE;
-		}
-
-		// Are the image dimensions within the allowed size?
-		// Note: This can fail if the server has an open_basedir restriction.
-		if ( ! $this->is_allowed_dimensions())
-		{
-			$this->set_error('upload_invalid_dimensions', 'info');
-			return FALSE;
-		}
-
-		// Sanitize the file name for security
-		$this->file_name = $this->_CI->security->sanitize_filename($this->file_name);
-
-		// Truncate the file name if it's too long
-		if ($this->max_filename > 0)
-		{
-			$this->file_name = $this->limit_filename_length($this->file_name, $this->max_filename);
-		}
-
-		// Remove white spaces in the name
-		if ($this->remove_spaces === TRUE)
-		{
-			$this->file_name = preg_replace('/\s+/', '_', $this->file_name);
-		}
-
-		if ($this->file_ext_tolower && ($ext_length = strlen($this->file_ext)))
-		{
-			// file_ext was previously lower-cased by a get_extension() call
-			$this->file_name = substr($this->file_name, 0, -$ext_length).$this->file_ext;
-		}
-
-		/*
-		 * Validate the file name
-		 * This function appends an number onto the end of
-		 * the file if one with the same name already exists.
-		 * If it returns false there was a problem.
-		 */
-		$this->orig_name = $this->file_name;
-		if (FALSE === ($this->file_name = $this->set_filename($this->upload_path, $this->file_name)))
-		{
-			return FALSE;
-		}
-
-		/*
-		 * Run the file through the XSS hacking filter
-		 * This helps prevent malicious code from being
-		 * embedded within a file. Scripts can easily
-		 * be disguised as images or other file types.
-		 */
-		if ($this->xss_clean && $this->do_xss_clean() === FALSE)
-		{
-			$this->set_error('upload_unable_to_write_file', 'error');
-			return FALSE;
-		}
-
-		/*
-		 * Move the file to the final destination
-		 * To deal with different server configurations
-		 * we'll attempt to use copy() first. If that fails
-		 * we'll use move_uploaded_file(). One of the two should
-		 * reliably work in most environments
-		 */
-		if ( ! @copy($this->file_temp, $this->upload_path.$this->file_name))
-		{
-			if ( ! @move_uploaded_file($this->file_temp, $this->upload_path.$this->file_name))
-			{
-				$this->set_error('upload_destination_error', 'error');
-				return FALSE;
-			}
-		}
-
-		/*
-		 * Set the finalized image dimensions
-		 * This sets the image width/height (assuming the
-		 * file was an image). We use this information
-		 * in the "data" function.
-		 */
-		$this->set_image_properties($this->upload_path.$this->file_name);
-
-		return TRUE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Finalized Data Array
-	 *
-	 * Returns an associative array containing all of the information
-	 * related to the upload, allowing the developer easy access in one array.
-	 *
-	 * @param	string	$index
-	 * @return	mixed
-	 */
-	public function data($index = NULL)
-	{
-		$data = array(
-				'file_name'		=> $this->file_name,
-				'file_type'		=> $this->file_type,
-				'file_path'		=> $this->upload_path,
-				'full_path'		=> $this->upload_path.$this->file_name,
-				'raw_name'		=> substr($this->file_name, 0, -strlen($this->file_ext)),
-				'orig_name'		=> $this->orig_name,
-				'client_name'		=> $this->client_name,
-				'file_ext'		=> $this->file_ext,
-				'file_size'		=> $this->file_size,
-				'is_image'		=> $this->is_image(),
-				'image_width'		=> $this->image_width,
-				'image_height'		=> $this->image_height,
-				'image_type'		=> $this->image_type,
-				'image_size_str'	=> $this->image_size_str,
-			);
-
-		if ( ! empty($index))
-		{
-			return isset($data[$index]) ? $data[$index] : NULL;
-		}
-
-		return $data;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Set Upload Path
-	 *
-	 * @param	string	$path
-	 * @return	CI_Upload
-	 */
-	public function set_upload_path($path)
-	{
-		// Make sure it has a trailing slash
-		$this->upload_path = rtrim($path, '/').'/';
-		return $this;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Set the file name
-	 *
-	 * This function takes a filename/path as input and looks for the
-	 * existence of a file with the same name. If found, it will append a
-	 * number to the end of the filename to avoid overwriting a pre-existing file.
-	 *
-	 * @param	string	$path
-	 * @param	string	$filename
-	 * @return	string
-	 */
-	public function set_filename($path, $filename)
-	{
-		if ($this->encrypt_name === TRUE)
-		{
-			$filename = md5(uniqid(mt_rand())).$this->file_ext;
-		}
-
-		if ($this->overwrite === TRUE OR ! file_exists($path.$filename))
-		{
-			return $filename;
-		}
-
-		$filename = str_replace($this->file_ext, '', $filename);
-
-		$new_filename = '';
-		for ($i = 1; $i < $this->max_filename_increment; $i++)
-		{
-			if ( ! file_exists($path.$filename.$i.$this->file_ext))
-			{
-				$new_filename = $filename.$i.$this->file_ext;
-				break;
-			}
-		}
-
-		if ($new_filename === '')
-		{
-			$this->set_error('upload_bad_filename', 'debug');
-			return FALSE;
-		}
-
-		return $new_filename;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Set Maximum File Size
-	 *
-	 * @param	int	$n
-	 * @return	CI_Upload
-	 */
-	public function set_max_filesize($n)
-	{
-		$this->max_size = ($n < 0) ? 0 : (int) $n;
-		return $this;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Set Maximum File Size
-	 *
-	 * An internal alias to set_max_filesize() to help with configuration
-	 * as initialize() will look for a set_<property_name>() method ...
-	 *
-	 * @param	int	$n
-	 * @return	CI_Upload
-	 */
-	protected function set_max_size($n)
-	{
-		return $this->set_max_filesize($n);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Set Maximum File Name Length
-	 *
-	 * @param	int	$n
-	 * @return	CI_Upload
-	 */
-	public function set_max_filename($n)
-	{
-		$this->max_filename = ($n < 0) ? 0 : (int) $n;
-		return $this;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Set Maximum Image Width
-	 *
-	 * @param	int	$n
-	 * @return	CI_Upload
-	 */
-	public function set_max_width($n)
-	{
-		$this->max_width = ($n < 0) ? 0 : (int) $n;
-		return $this;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Set Maximum Image Height
-	 *
-	 * @param	int	$n
-	 * @return	CI_Upload
-	 */
-	public function set_max_height($n)
-	{
-		$this->max_height = ($n < 0) ? 0 : (int) $n;
-		return $this;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Set minimum image width
-	 *
-	 * @param	int	$n
-	 * @return	CI_Upload
-	 */
-	public function set_min_width($n)
-	{
-		$this->min_width = ($n < 0) ? 0 : (int) $n;
-		return $this;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Set minimum image height
-	 *
-	 * @param	int	$n
-	 * @return	CI_Upload
-	 */
-	public function set_min_height($n)
-	{
-		$this->min_height = ($n < 0) ? 0 : (int) $n;
-		return $this;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Set Allowed File Types
-	 *
-	 * @param	mixed	$types
-	 * @return	CI_Upload
-	 */
-	public function set_allowed_types($types)
-	{
-		$this->allowed_types = (is_array($types) OR $types === '*')
-			? $types
-			: explode('|', $types);
-		return $this;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Set Image Properties
-	 *
-	 * Uses GD to determine the width/height/type of image
-	 *
-	 * @param	string	$path
-	 * @return	CI_Upload
-	 */
-	public function set_image_properties($path = '')
-	{
-		if ($this->is_image() && function_exists('getimagesize'))
-		{
-			if (FALSE !== ($D = @getimagesize($path)))
-			{
-				$types = array(1 => 'gif', 2 => 'jpeg', 3 => 'png');
-
-				$this->image_width	= $D[0];
-				$this->image_height	= $D[1];
-				$this->image_type	= isset($types[$D[2]]) ? $types[$D[2]] : 'unknown';
-				$this->image_size_str	= $D[3]; // string containing height and width
-			}
-		}
-
-		return $this;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Set XSS Clean
-	 *
-	 * Enables the XSS flag so that the file that was uploaded
-	 * will be run through the XSS filter.
-	 *
-	 * @param	bool	$flag
-	 * @return	CI_Upload
-	 */
-	public function set_xss_clean($flag = FALSE)
-	{
-		$this->xss_clean = ($flag === TRUE);
-		return $this;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Validate the image
-	 *
-	 * @return	bool
-	 */
-	public function is_image()
-	{
-		// IE will sometimes return odd mime-types during upload, so here we just standardize all
-		// jpegs or pngs to the same file type.
-
-		$png_mimes  = array('image/x-png');
-		$jpeg_mimes = array('image/jpg', 'image/jpe', 'image/jpeg', 'image/pjpeg');
-
-		if (in_array($this->file_type, $png_mimes))
-		{
-			$this->file_type = 'image/png';
-		}
-		elseif (in_array($this->file_type, $jpeg_mimes))
-		{
-			$this->file_type = 'image/jpeg';
-		}
-
-		$img_mimes = array('image/gif',	'image/jpeg', 'image/png');
-
-		return in_array($this->file_type, $img_mimes, TRUE);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Verify that the filetype is allowed
-	 *
-	 * @param	bool	$ignore_mime
-	 * @return	bool
-	 */
-	public function is_allowed_filetype($ignore_mime = FALSE)
-	{
-		if ($this->allowed_types === '*')
-		{
-			return TRUE;
-		}
-
-		if (empty($this->allowed_types) OR ! is_array($this->allowed_types))
-		{
-			$this->set_error('upload_no_file_types', 'debug');
-			return FALSE;
-		}
-
-		$ext = strtolower(ltrim($this->file_ext, '.'));
-
-		if ( ! in_array($ext, $this->allowed_types, TRUE))
-		{
-			return FALSE;
-		}
-
-		// Images get some additional checks
-		if (in_array($ext, array('gif', 'jpg', 'jpeg', 'jpe', 'png'), TRUE) && @getimagesize($this->file_temp) === FALSE)
-		{
-			return FALSE;
-		}
-
-		if ($ignore_mime === TRUE)
-		{
-			return TRUE;
-		}
-
-		if (isset($this->_mimes[$ext]))
-		{
-			return is_array($this->_mimes[$ext])
-				? in_array($this->file_type, $this->_mimes[$ext], TRUE)
-				: ($this->_mimes[$ext] === $this->file_type);
-		}
-
-		return FALSE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Verify that the file is within the allowed size
-	 *
-	 * @return	bool
-	 */
-	public function is_allowed_filesize()
-	{
-		return ($this->max_size === 0 OR $this->max_size > $this->file_size);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Verify that the image is within the allowed width/height
-	 *
-	 * @return	bool
-	 */
-	public function is_allowed_dimensions()
-	{
-		if ( ! $this->is_image())
-		{
-			return TRUE;
-		}
-
-		if (function_exists('getimagesize'))
-		{
-			$D = @getimagesize($this->file_temp);
-
-			if ($this->max_width > 0 && $D[0] > $this->max_width)
-			{
-				return FALSE;
-			}
-
-			if ($this->max_height > 0 && $D[1] > $this->max_height)
-			{
-				return FALSE;
-			}
-
-			if ($this->min_width > 0 && $D[0] < $this->min_width)
-			{
-				return FALSE;
-			}
-
-			if ($this->min_height > 0 && $D[1] < $this->min_height)
-			{
-				return FALSE;
-			}
-		}
-
-		return TRUE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Validate Upload Path
-	 *
-	 * Verifies that it is a valid upload path with proper permissions.
-	 *
-	 * @return	bool
-	 */
-	public function validate_upload_path()
-	{
-		if ($this->upload_path === '')
-		{
-			$this->set_error('upload_no_filepath', 'error');
-			return FALSE;
-		}
-
-		if (realpath($this->upload_path) !== FALSE)
-		{
-			$this->upload_path = str_replace('\\', '/', realpath($this->upload_path));
-		}
-
-		if ( ! is_dir($this->upload_path))
-		{
-			$this->set_error('upload_no_filepath', 'error');
-			return FALSE;
-		}
-
-		if ( ! is_really_writable($this->upload_path))
-		{
-			$this->set_error('upload_not_writable', 'error');
-			return FALSE;
-		}
-
-		$this->upload_path = preg_replace('/(.+?)\/*$/', '\\1/',  $this->upload_path);
-		return TRUE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Extract the file extension
-	 *
-	 * @param	string	$filename
-	 * @return	string
-	 */
-	public function get_extension($filename)
-	{
-		$x = explode('.', $filename);
-
-		if (count($x) === 1)
-		{
-			return '';
-		}
-
-		$ext = ($this->file_ext_tolower) ? strtolower(end($x)) : end($x);
-		return '.'.$ext;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Limit the File Name Length
-	 *
-	 * @param	string	$filename
-	 * @param	int	$length
-	 * @return	string
-	 */
-	public function limit_filename_length($filename, $length)
-	{
-		if (strlen($filename) < $length)
-		{
-			return $filename;
-		}
-
-		$ext = '';
-		if (strpos($filename, '.') !== FALSE)
-		{
-			$parts		= explode('.', $filename);
-			$ext		= '.'.array_pop($parts);
-			$filename	= implode('.', $parts);
-		}
-
-		return substr($filename, 0, ($length - strlen($ext))).$ext;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Runs the file through the XSS clean function
-	 *
-	 * This prevents people from embedding malicious code in their files.
-	 * I'm not sure that it won't negatively affect certain files in unexpected ways,
-	 * but so far I haven't found that it causes trouble.
-	 *
-	 * @return	string
-	 */
-	public function do_xss_clean()
-	{
-		$file = $this->file_temp;
-
-		if (filesize($file) == 0)
-		{
-			return FALSE;
-		}
-
-		if (memory_get_usage() && ($memory_limit = ini_get('memory_limit')) > 0)
-		{
-			$memory_limit = str_split($memory_limit, strspn($memory_limit, '1234567890'));
-			if ( ! empty($memory_limit[1]))
-			{
-				switch ($memory_limit[1][0])
-				{
-					case 'g':
-					case 'G':
-						$memory_limit[0] *= 1024 * 1024 * 1024;
-						break;
-					case 'm':
-					case 'M':
-						$memory_limit[0] *= 1024 * 1024;
-						break;
-					default:
-						break;
-				}
-			}
-
-			$memory_limit = (int) ceil(filesize($file) + $memory_limit[0]);
-			ini_set('memory_limit', $memory_limit); // When an integer is used, the value is measured in bytes. - PHP.net
-		}
-
-		// If the file being uploaded is an image, then we should have no problem with XSS attacks (in theory), but
-		// IE can be fooled into mime-type detecting a malformed image as an html file, thus executing an XSS attack on anyone
-		// using IE who looks at the image. It does this by inspecting the first 255 bytes of an image. To get around this
-		// CI will itself look at the first 255 bytes of an image to determine its relative safety. This can save a lot of
-		// processor power and time if it is actually a clean image, as it will be in nearly all instances _except_ an
-		// attempted XSS attack.
-
-		if (function_exists('getimagesize') && @getimagesize($file) !== FALSE)
-		{
-			if (($file = @fopen($file, 'rb')) === FALSE) // "b" to force binary
-			{
-				return FALSE; // Couldn't open the file, return FALSE
-			}
-
-			$opening_bytes = fread($file, 256);
-			fclose($file);
-
-			// These are known to throw IE into mime-type detection chaos
-			// <a, <body, <head, <html, <img, <plaintext, <pre, <script, <table, <title
-			// title is basically just in SVG, but we filter it anyhow
-
-			// if it's an image or no "triggers" detected in the first 256 bytes - we're good
-			return ! preg_match('/<(a|body|head|html|img|plaintext|pre|script|table|title)[\s>]/i', $opening_bytes);
-		}
-
-		if (($data = @file_get_contents($file)) === FALSE)
-		{
-			return FALSE;
-		}
-
-		return $this->_CI->security->xss_clean($data, TRUE);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Set an error message
-	 *
-	 * @param	string	$msg
-	 * @return	CI_Upload
-	 */
-	public function set_error($msg, $log_level = 'error')
-	{
-		$this->_CI->lang->load('upload');
-
-		is_array($msg) OR $msg = array($msg);
-		foreach ($msg as $val)
-		{
-			$msg = ($this->_CI->lang->line($val) === FALSE) ? $val : $this->_CI->lang->line($val);
-			$this->error_msg[] = $msg;
-			log_message($log_level, $msg);
-		}
-
-		return $this;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Display the error message
-	 *
-	 * @param	string	$open
-	 * @param	string	$close
-	 * @return	string
-	 */
-	public function display_errors($open = '<p>', $close = '</p>')
-	{
-		return (count($this->error_msg) > 0) ? $open.implode($close.$open, $this->error_msg).$close : '';
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Prep Filename
-	 *
-	 * Prevents possible script execution from Apache's handling
-	 * of files' multiple extensions.
-	 *
-	 * @link	http://httpd.apache.org/docs/1.3/mod/mod_mime.html#multipleext
-	 *
-	 * @param	string	$filename
-	 * @return	string
-	 */
-	protected function _prep_filename($filename)
-	{
-		if ($this->mod_mime_fix === FALSE OR $this->allowed_types === '*' OR ($ext_pos = strrpos($filename, '.')) === FALSE)
-		{
-			return $filename;
-		}
-
-		$ext = substr($filename, $ext_pos);
-		$filename = substr($filename, 0, $ext_pos);
-		return str_replace('.', '_', $filename).$ext;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * File MIME type
-	 *
-	 * Detects the (actual) MIME type of the uploaded file, if possible.
-	 * The input array is expected to be $_FILES[$field]
-	 *
-	 * @param	array	$file
-	 * @return	void
-	 */
-	protected function _file_mime_type($file)
-	{
-		// We'll need this to validate the MIME info string (e.g. text/plain; charset=us-ascii)
-		$regexp = '/^([a-z\-]+\/[a-z0-9\-\.\+]+)(;\s.+)?$/';
-
-		/**
-		 * Fileinfo extension - most reliable method
-		 *
-		 * Apparently XAMPP, CentOS, cPanel and who knows what
-		 * other PHP distribution channels EXPLICITLY DISABLE
-		 * ext/fileinfo, which is otherwise enabled by default
-		 * since PHP 5.3 ...
-		 */
-		if (function_exists('finfo_file'))
-		{
-			$finfo = @finfo_open(FILEINFO_MIME);
-			if (is_resource($finfo)) // It is possible that a FALSE value is returned, if there is no magic MIME database file found on the system
-			{
-				$mime = @finfo_file($finfo, $file['tmp_name']);
-				finfo_close($finfo);
-
-				/* According to the comments section of the PHP manual page,
-				 * it is possible that this function returns an empty string
-				 * for some files (e.g. if they don't exist in the magic MIME database)
-				 */
-				if (is_string($mime) && preg_match($regexp, $mime, $matches))
-				{
-					$this->file_type = $matches[1];
-					return;
-				}
-			}
-		}
-
-		/* This is an ugly hack, but UNIX-type systems provide a "native" way to detect the file type,
-		 * which is still more secure than depending on the value of $_FILES[$field]['type'], and as it
-		 * was reported in issue #750 (https://github.com/EllisLab/CodeIgniter/issues/750) - it's better
-		 * than mime_content_type() as well, hence the attempts to try calling the command line with
-		 * three different functions.
-		 *
-		 * Notes:
-		 *	- the DIRECTORY_SEPARATOR comparison ensures that we're not on a Windows system
-		 *	- many system admins would disable the exec(), shell_exec(), popen() and similar functions
-		 *	  due to security concerns, hence the function_usable() checks
-		 */
-		if (DIRECTORY_SEPARATOR !== '\\')
-		{
-			$cmd = function_exists('escapeshellarg')
-				? 'file --brief --mime '.escapeshellarg($file['tmp_name']).' 2>&1'
-				: 'file --brief --mime '.$file['tmp_name'].' 2>&1';
-
-			if (function_usable('exec'))
-			{
-				/* This might look confusing, as $mime is being populated with all of the output when set in the second parameter.
-				 * However, we only need the last line, which is the actual return value of exec(), and as such - it overwrites
-				 * anything that could already be set for $mime previously. This effectively makes the second parameter a dummy
-				 * value, which is only put to allow us to get the return status code.
-				 */
-				$mime = @exec($cmd, $mime, $return_status);
-				if ($return_status === 0 && is_string($mime) && preg_match($regexp, $mime, $matches))
-				{
-					$this->file_type = $matches[1];
-					return;
-				}
-			}
-
-			if ( ! ini_get('safe_mode') && function_usable('shell_exec'))
-			{
-				$mime = @shell_exec($cmd);
-				if (strlen($mime) > 0)
-				{
-					$mime = explode("\n", trim($mime));
-					if (preg_match($regexp, $mime[(count($mime) - 1)], $matches))
-					{
-						$this->file_type = $matches[1];
-						return;
-					}
-				}
-			}
-
-			if (function_usable('popen'))
-			{
-				$proc = @popen($cmd, 'r');
-				if (is_resource($proc))
-				{
-					$mime = @fread($proc, 512);
-					@pclose($proc);
-					if ($mime !== FALSE)
-					{
-						$mime = explode("\n", trim($mime));
-						if (preg_match($regexp, $mime[(count($mime) - 1)], $matches))
-						{
-							$this->file_type = $matches[1];
-							return;
-						}
-					}
-				}
-			}
-		}
-
-		// Fall back to mime_content_type(), if available (still better than $_FILES[$field]['type'])
-		if (function_exists('mime_content_type'))
-		{
-			$this->file_type = @mime_content_type($file['tmp_name']);
-			if (strlen($this->file_type) > 0) // It's possible that mime_content_type() returns FALSE or an empty string
-			{
-				return;
-			}
-		}
-
-		$this->file_type = $file['type'];
-	}
-
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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

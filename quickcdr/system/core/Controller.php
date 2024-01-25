@@ -1,96 +1,37 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
- * @license	https://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 1.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * Application Controller Class
- *
- * This class object is the super class that every library in
- * CodeIgniter will be assigned to.
- *
- * @package		CodeIgniter
- * @subpackage	Libraries
- * @category	Libraries
- * @author		EllisLab Dev Team
- * @link		https://codeigniter.com/user_guide/general/controllers.html
- */
-class CI_Controller {
-
-	/**
-	 * Reference to the CI singleton
-	 *
-	 * @var	object
-	 */
-	private static $instance;
-
-	/**
-	 * Class constructor
-	 *
-	 * @return	void
-	 */
-	public function __construct()
-	{
-		self::$instance =& $this;
-
-		// Assign all the class objects that were instantiated by the
-		// bootstrap file (CodeIgniter.php) to local class variables
-		// so that CI can run as one big super object.
-		foreach (is_loaded() as $var => $class)
-		{
-			$this->$var =& load_class($class);
-		}
-
-		$this->load =& load_class('Loader', 'core');
-		$this->load->initialize();
-		log_message('info', 'Controller Class Initialized');
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Get the CI singleton
-	 *
-	 * @static
-	 * @return	object
-	 */
-	public static function &get_instance()
-	{
-		return self::$instance;
-	}
-
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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

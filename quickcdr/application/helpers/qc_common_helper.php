@@ -1,110 +1,65 @@
-<?php
-
-
-/**
- * Get valid disposition list for CDRs
- *
- * @return array List of valid dispositions
- */
-function qc_get_disposition_types()
-{
-    return array('ANSWERED', 'NO ANSWER', 'BUSY', 'FAILED');
-}
-
-
-/**
- * Get available languages
- *
- * @return array List of languages
- */
-function qc_get_languages()
-{
-    return array('english', 'georgian', 'russian');
-}
-
-
-
-/**
-  * Set session flashdata for notifications
-  *
-  * @param string $style Style of alert, should be bootstraps own 'danger', 'success' and so on...
-  * @param string $body alert message body
-  * @return bool True on success, false otherwise
-  */
-function qc_set_flash_notif($style = 'primary', $body = false)
-{
-    if (!$body) {
-        return false;
-    }
-    $ci =& get_instance();
-    $ci->session->set_flashdata('msg_style', $style);
-    $ci->session->set_flashdata('msg_body', $body);
-    return true;
-}
-
-
-/**
- * Convert seconds to hh:mm:ss format
- *
- * @param string $seconds Seconds
- * @return string
- */
-function qc_sec_to_min($sec = 0) {
-    if ($sec == 0) {
-        return "00:00";
-    }
-    $minutes = floor(($sec / 60) % 60);
-    $seconds = $sec % 60;
-    if ($minutes < 10) { $minutes = "0".$minutes; }
-    if ($seconds < 10) { $seconds = "0".$seconds; }
-    return $minutes.":".$seconds;
-}
-
-
-/**
- * Get application version
- *
- * @return string Application version
- */
-function qc_get_version_string()
-{
-    $v = file_exists(APPPATH."/VERSION") ? "QuickCDR v".file_get_contents(APPPATH."/VERSION") : "";
-    return $v;
-}
-
-
-/**
- * Get recording file path for specific call
- *
- * @param obj Call object
- * @return Empty string on error, or full path of recording file
- */
-function qc_get_call_recording_path($call = false)
-{
-    $path = '';
-    if (!$call) {
-        return $path;
-    }
-    $ci =& get_instance();
-	
-    $hot_path = '/var/spool/asterisk/monitor';
-    $cold_path = '/var/monitor_archive';	
-
-    $t = $call->uniqueid;
-    $t = explode(".", $t);
-    $t = $t[0];
-    $year   = date('Y',$t);
-    $month  = date('m',$t);
-    $day    = date('d',$t);
-	
-	$path = $hot_path."/".$year."/".$month."/".$day."/".$call->recordingfile;
-
-    // Try searching in backup
-    if (!is_file($path)) {
-        $path = $cold_path."/".$year."/".$month."/".$day."/".$call->recordingfile;
-        if (!is_file($path)) {
-            $path = $hot_path."/".$year."/".$month."/".$day."/".$call->recordingfile;
-        }
-    }
-    return $path;
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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

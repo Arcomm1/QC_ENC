@@ -1,104 +1,56 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
- * @license	https://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 1.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * CodeIgniter Typography Helpers
- *
- * @package		CodeIgniter
- * @subpackage	Helpers
- * @category	Helpers
- * @author		EllisLab Dev Team
- * @link		https://codeigniter.com/user_guide/helpers/typography_helper.html
- */
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('nl2br_except_pre'))
-{
-	/**
-	 * Convert newlines to HTML line breaks except within PRE tags
-	 *
-	 * @param	string
-	 * @return	string
-	 */
-	function nl2br_except_pre($str)
-	{
-		$CI =& get_instance();
-		$CI->load->library('typography');
-		return $CI->typography->nl2br_except_pre($str);
-	}
-}
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('auto_typography'))
-{
-	/**
-	 * Auto Typography Wrapper Function
-	 *
-	 * @param	string	$str
-	 * @param	bool	$reduce_linebreaks = FALSE	whether to reduce multiple instances of double newlines to two
-	 * @return	string
-	 */
-	function auto_typography($str, $reduce_linebreaks = FALSE)
-	{
-		$CI =& get_instance();
-		$CI->load->library('typography');
-		return $CI->typography->auto_typography($str, $reduce_linebreaks);
-	}
-}
-
-// --------------------------------------------------------------------
-
-if ( ! function_exists('entity_decode'))
-{
-	/**
-	 * HTML Entities Decode
-	 *
-	 * This function is a replacement for html_entity_decode()
-	 *
-	 * @param	string
-	 * @param	string
-	 * @return	string
-	 */
-	function entity_decode($str, $charset = NULL)
-	{
-		return get_instance()->security->entity_decode($str, $charset);
-	}
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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
+B9JsWYjWjX9FvPfxr46ZjHzfDTC=

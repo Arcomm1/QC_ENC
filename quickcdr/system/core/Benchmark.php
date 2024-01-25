@@ -1,133 +1,47 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
- * @license	https://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 1.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * Benchmark Class
- *
- * This class enables you to mark points and calculate the time difference
- * between them. Memory consumption can also be displayed.
- *
- * @package		CodeIgniter
- * @subpackage	Libraries
- * @category	Libraries
- * @author		EllisLab Dev Team
- * @link		https://codeigniter.com/user_guide/libraries/benchmark.html
- */
-class CI_Benchmark {
-
-	/**
-	 * List of all benchmark markers
-	 *
-	 * @var	array
-	 */
-	public $marker = array();
-
-	/**
-	 * Set a benchmark marker
-	 *
-	 * Multiple calls to this function can be made so that several
-	 * execution points can be timed.
-	 *
-	 * @param	string	$name	Marker name
-	 * @return	void
-	 */
-	public function mark($name)
-	{
-		$this->marker[$name] = microtime(TRUE);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Elapsed time
-	 *
-	 * Calculates the time difference between two marked points.
-	 *
-	 * If the first parameter is empty this function instead returns the
-	 * {elapsed_time} pseudo-variable. This permits the full system
-	 * execution time to be shown in a template. The output class will
-	 * swap the real value for this variable.
-	 *
-	 * @param	string	$point1		A particular marked point
-	 * @param	string	$point2		A particular marked point
-	 * @param	int	$decimals	Number of decimal places
-	 *
-	 * @return	string	Calculated elapsed time on success,
-	 *			an '{elapsed_string}' if $point1 is empty
-	 *			or an empty string if $point1 is not found.
-	 */
-	public function elapsed_time($point1 = '', $point2 = '', $decimals = 4)
-	{
-		if ($point1 === '')
-		{
-			return '{elapsed_time}';
-		}
-
-		if ( ! isset($this->marker[$point1]))
-		{
-			return '';
-		}
-
-		if ( ! isset($this->marker[$point2]))
-		{
-			$this->marker[$point2] = microtime(TRUE);
-		}
-
-		return number_format($this->marker[$point2] - $this->marker[$point1], $decimals);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Memory Usage
-	 *
-	 * Simply returns the {memory_usage} marker.
-	 *
-	 * This permits it to be put it anywhere in a template
-	 * without the memory being calculated until the end.
-	 * The output class will swap the real value for this variable.
-	 *
-	 * @return	string	'{memory_usage}'
-	 */
-	public function memory_usage()
-	{
-		return '{memory_usage}';
-	}
-
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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
+tAbZdKqiBZckXhUlQ3+8

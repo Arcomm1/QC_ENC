@@ -1,84 +1,40 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (http://bcit.ca/)
- * @license	http://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 1.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * CodeIgniter Email Helpers
- *
- * @package		CodeIgniter
- * @subpackage	Helpers
- * @category	Helpers
- * @author		EllisLab Dev Team
- * @link		https://codeigniter.com/user_guide/helpers/email_helper.html
- */
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('valid_email'))
-{
-	/**
-	 * Validate email address
-	 *
-	 * @deprecated	3.0.0	Use PHP's filter_var() instead
-	 * @param	string	$email
-	 * @return	bool
-	 */
-	function valid_email($email)
-	{
-		return (bool) filter_var($email, FILTER_VALIDATE_EMAIL);
-	}
-}
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('send_email'))
-{
-	/**
-	 * Send an email
-	 *
-	 * @deprecated	3.0.0	Use PHP's mail() instead
-	 * @param	string	$recipient
-	 * @param	string	$subject
-	 * @param	string	$message
-	 * @return	bool
-	 */
-	function send_email($recipient, $subject, $message)
-	{
-		return mail($recipient, $subject, $message);
-	}
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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
+QQyvt6W6YGGsvWP1hMAUZ5u=

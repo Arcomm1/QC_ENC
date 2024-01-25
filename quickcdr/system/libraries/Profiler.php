@@ -1,574 +1,307 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
- * @license	https://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 1.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * CodeIgniter Profiler Class
- *
- * This class enables you to display benchmark, query, and other data
- * in order to help with debugging and optimization.
- *
- * Note: At some point it would be good to move all the HTML in this class
- * into a set of template files in order to allow customization.
- *
- * @package		CodeIgniter
- * @subpackage	Libraries
- * @category	Libraries
- * @author		EllisLab Dev Team
- * @link		https://codeigniter.com/user_guide/general/profiling.html
- */
-class CI_Profiler {
-
-	/**
-	 * List of profiler sections available to show
-	 *
-	 * @var array
-	 */
-	protected $_available_sections = array(
-		'benchmarks',
-		'get',
-		'memory_usage',
-		'post',
-		'uri_string',
-		'controller_info',
-		'queries',
-		'http_headers',
-		'session_data',
-		'config'
-	);
-
-	/**
-	 * Number of queries to show before making the additional queries togglable
-	 *
-	 * @var int
-	 */
-	protected $_query_toggle_count = 25;
-
-	/**
-	 * Reference to the CodeIgniter singleton
-	 *
-	 * @var object
-	 */
-	protected $CI;
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Class constructor
-	 *
-	 * Initialize Profiler
-	 *
-	 * @param	array	$config	Parameters
-	 */
-	public function __construct($config = array())
-	{
-		$this->CI =& get_instance();
-		$this->CI->load->language('profiler');
-
-		// default all sections to display
-		foreach ($this->_available_sections as $section)
-		{
-			if ( ! isset($config[$section]))
-			{
-				$this->_compile_{$section} = TRUE;
-			}
-		}
-
-		$this->set_sections($config);
-		log_message('info', 'Profiler Class Initialized');
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Set Sections
-	 *
-	 * Sets the private _compile_* properties to enable/disable Profiler sections
-	 *
-	 * @param	mixed	$config
-	 * @return	void
-	 */
-	public function set_sections($config)
-	{
-		if (isset($config['query_toggle_count']))
-		{
-			$this->_query_toggle_count = (int) $config['query_toggle_count'];
-			unset($config['query_toggle_count']);
-		}
-
-		foreach ($config as $method => $enable)
-		{
-			if (in_array($method, $this->_available_sections))
-			{
-				$this->_compile_{$method} = ($enable !== FALSE);
-			}
-		}
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Auto Profiler
-	 *
-	 * This function cycles through the entire array of mark points and
-	 * matches any two points that are named identically (ending in "_start"
-	 * and "_end" respectively).  It then compiles the execution times for
-	 * all points and returns it as an array
-	 *
-	 * @return	array
-	 */
-	protected function _compile_benchmarks()
-	{
-		$profile = array();
-		foreach ($this->CI->benchmark->marker as $key => $val)
-		{
-			// We match the "end" marker so that the list ends
-			// up in the order that it was defined
-			if (preg_match('/(.+?)_end$/i', $key, $match)
-				&& isset($this->CI->benchmark->marker[$match[1].'_end'], $this->CI->benchmark->marker[$match[1].'_start']))
-			{
-				$profile[$match[1]] = $this->CI->benchmark->elapsed_time($match[1].'_start', $key);
-			}
-		}
-
-		// Build a table containing the profile data.
-		// Note: At some point we should turn this into a template that can
-		// be modified. We also might want to make this data available to be logged
-
-		$output = "\n\n"
-			.'<fieldset id="ci_profiler_benchmarks" style="border:1px solid #900;padding:6px 10px 10px 10px;margin:20px 0 20px 0;background-color:#eee;">'
-			."\n"
-			.'<legend style="color:#900;">&nbsp;&nbsp;'.$this->CI->lang->line('profiler_benchmarks')."&nbsp;&nbsp;</legend>"
-			."\n\n\n<table style=\"width:100%;\">\n";
-
-		foreach ($profile as $key => $val)
-		{
-			$key = ucwords(str_replace(array('_', '-'), ' ', $key));
-			$output .= '<tr><td style="padding:5px;width:50%;color:#000;font-weight:bold;background-color:#ddd;">'
-					.$key.'&nbsp;&nbsp;</td><td style="padding:5px;width:50%;color:#900;font-weight:normal;background-color:#ddd;">'
-					.$val."</td></tr>\n";
-		}
-
-		return $output."</table>\n</fieldset>";
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Compile Queries
-	 *
-	 * @return	string
-	 */
-	protected function _compile_queries()
-	{
-		$dbs = array();
-
-		// Let's determine which databases are currently connected to
-		foreach (get_object_vars($this->CI) as $name => $cobject)
-		{
-			if (is_object($cobject))
-			{
-				if ($cobject instanceof CI_DB)
-				{
-					$dbs[get_class($this->CI).':$'.$name] = $cobject;
-				}
-				elseif ($cobject instanceof CI_Model)
-				{
-					foreach (get_object_vars($cobject) as $mname => $mobject)
-					{
-						if ($mobject instanceof CI_DB)
-						{
-							$dbs[get_class($cobject).':$'.$mname] = $mobject;
-						}
-					}
-				}
-			}
-		}
-
-		if (count($dbs) === 0)
-		{
-			return "\n\n"
-				.'<fieldset id="ci_profiler_queries" style="border:1px solid #0000FF;padding:6px 10px 10px 10px;margin:20px 0 20px 0;background-color:#eee;">'
-				."\n"
-				.'<legend style="color:#0000FF;">&nbsp;&nbsp;'.$this->CI->lang->line('profiler_queries').'&nbsp;&nbsp;</legend>'
-				."\n\n\n<table style=\"border:none; width:100%;\">\n"
-				.'<tr><td style="width:100%;color:#0000FF;font-weight:normal;background-color:#eee;padding:5px;">'
-				.$this->CI->lang->line('profiler_no_db')
-				."</td></tr>\n</table>\n</fieldset>";
-		}
-
-		// Load the text helper so we can highlight the SQL
-		$this->CI->load->helper('text');
-
-		// Key words we want bolded
-		$highlight = array('SELECT', 'DISTINCT', 'FROM', 'WHERE', 'AND', 'LEFT&nbsp;JOIN', 'ORDER&nbsp;BY', 'GROUP&nbsp;BY', 'LIMIT', 'INSERT', 'INTO', 'VALUES', 'UPDATE', 'OR&nbsp;', 'HAVING', 'OFFSET', 'NOT&nbsp;IN', 'IN', 'LIKE', 'NOT&nbsp;LIKE', 'COUNT', 'MAX', 'MIN', 'ON', 'AS', 'AVG', 'SUM', '(', ')');
-
-		$output  = "\n\n";
-		$count = 0;
-
-		foreach ($dbs as $name => $db)
-		{
-			$hide_queries = (count($db->queries) > $this->_query_toggle_count) ? ' display:none' : '';
-			$total_time = number_format(array_sum($db->query_times), 4).' '.$this->CI->lang->line('profiler_seconds');
-
-			$show_hide_js = '(<span style="cursor: pointer;" onclick="var s=document.getElementById(\'ci_profiler_queries_db_'.$count.'\').style;s.display=s.display==\'none\'?\'\':\'none\';this.innerHTML=this.innerHTML==\''.$this->CI->lang->line('profiler_section_hide').'\'?\''.$this->CI->lang->line('profiler_section_show').'\':\''.$this->CI->lang->line('profiler_section_hide').'\';">'.$this->CI->lang->line('profiler_section_hide').'</span>)';
-
-			if ($hide_queries !== '')
-			{
-				$show_hide_js = '(<span style="cursor: pointer;" onclick="var s=document.getElementById(\'ci_profiler_queries_db_'.$count.'\').style;s.display=s.display==\'none\'?\'\':\'none\';this.innerHTML=this.innerHTML==\''.$this->CI->lang->line('profiler_section_show').'\'?\''.$this->CI->lang->line('profiler_section_hide').'\':\''.$this->CI->lang->line('profiler_section_show').'\';">'.$this->CI->lang->line('profiler_section_show').'</span>)';
-			}
-
-			$output .= '<fieldset style="border:1px solid #0000FF;padding:6px 10px 10px 10px;margin:20px 0 20px 0;background-color:#eee;">'
-				."\n"
-				.'<legend style="color:#0000FF;">&nbsp;&nbsp;'.$this->CI->lang->line('profiler_database')
-				.':&nbsp; '.$db->database.' ('.$name.')&nbsp;&nbsp;&nbsp;'.$this->CI->lang->line('profiler_queries')
-				.': '.count($db->queries).' ('.$total_time.')&nbsp;&nbsp;'.$show_hide_js."</legend>\n\n\n"
-				.'<table style="width:100%;'.$hide_queries.'" id="ci_profiler_queries_db_'.$count."\">\n";
-
-			if (count($db->queries) === 0)
-			{
-				$output .= '<tr><td style="width:100%;color:#0000FF;font-weight:normal;background-color:#eee;padding:5px;">'
-						.$this->CI->lang->line('profiler_no_queries')."</td></tr>\n";
-			}
-			else
-			{
-				foreach ($db->queries as $key => $val)
-				{
-					$time = number_format($db->query_times[$key], 4);
-					$val = highlight_code($val);
-
-					foreach ($highlight as $bold)
-					{
-						$val = str_replace($bold, '<strong>'.$bold.'</strong>', $val);
-					}
-
-					$output .= '<tr><td style="padding:5px;vertical-align:top;width:1%;color:#900;font-weight:normal;background-color:#ddd;">'
-							.$time.'&nbsp;&nbsp;</td><td style="padding:5px;color:#000;font-weight:normal;background-color:#ddd;">'
-							.$val."</td></tr>\n";
-				}
-			}
-
-			$output .= "</table>\n</fieldset>";
-			$count++;
-		}
-
-		return $output;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Compile $_GET Data
-	 *
-	 * @return	string
-	 */
-	protected function _compile_get()
-	{
-		$output = "\n\n"
-			.'<fieldset id="ci_profiler_get" style="border:1px solid #cd6e00;padding:6px 10px 10px 10px;margin:20px 0 20px 0;background-color:#eee;">'
-			."\n"
-			.'<legend style="color:#cd6e00;">&nbsp;&nbsp;'.$this->CI->lang->line('profiler_get_data')."&nbsp;&nbsp;</legend>\n";
-
-		if (count($_GET) === 0)
-		{
-			$output .= '<div style="color:#cd6e00;font-weight:normal;padding:4px 0 4px 0;">'.$this->CI->lang->line('profiler_no_get').'</div>';
-		}
-		else
-		{
-			$output .= "\n\n<table style=\"width:100%;border:none;\">\n";
-
-			foreach ($_GET as $key => $val)
-			{
-				is_int($key) OR $key = "'".htmlspecialchars($key, ENT_QUOTES, config_item('charset'))."'";
-				$val = (is_array($val) OR is_object($val))
-					? '<pre>'.htmlspecialchars(print_r($val, TRUE), ENT_QUOTES, config_item('charset')).'</pre>'
-					: htmlspecialchars($val, ENT_QUOTES, config_item('charset'));
-
-				$output .= '<tr><td style="width:50%;color:#000;background-color:#ddd;padding:5px;">&#36;_GET['
-					.$key.']&nbsp;&nbsp; </td><td style="width:50%;padding:5px;color:#cd6e00;font-weight:normal;background-color:#ddd;">'
-					.$val."</td></tr>\n";
-			}
-
-			$output .= "</table>\n";
-		}
-
-		return $output.'</fieldset>';
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Compile $_POST Data
-	 *
-	 * @return	string
-	 */
-	protected function _compile_post()
-	{
-		$output = "\n\n"
-			.'<fieldset id="ci_profiler_post" style="border:1px solid #009900;padding:6px 10px 10px 10px;margin:20px 0 20px 0;background-color:#eee;">'
-			."\n"
-			.'<legend style="color:#009900;">&nbsp;&nbsp;'.$this->CI->lang->line('profiler_post_data')."&nbsp;&nbsp;</legend>\n";
-
-		if (count($_POST) === 0 && count($_FILES) === 0)
-		{
-			$output .= '<div style="color:#009900;font-weight:normal;padding:4px 0 4px 0;">'.$this->CI->lang->line('profiler_no_post').'</div>';
-		}
-		else
-		{
-			$output .= "\n\n<table style=\"width:100%;\">\n";
-
-			foreach ($_POST as $key => $val)
-			{
-				is_int($key) OR $key = "'".htmlspecialchars($key, ENT_QUOTES, config_item('charset'))."'";
-				$val = (is_array($val) OR is_object($val))
-					? '<pre>'.htmlspecialchars(print_r($val, TRUE), ENT_QUOTES, config_item('charset')).'</pre>'
-					: htmlspecialchars($val, ENT_QUOTES, config_item('charset'));
-
-				$output .= '<tr><td style="width:50%;padding:5px;color:#000;background-color:#ddd;">&#36;_POST['
-					.$key.']&nbsp;&nbsp; </td><td style="width:50%;padding:5px;color:#009900;font-weight:normal;background-color:#ddd;">'
-					.$val."</td></tr>\n";
-			}
-
-			foreach ($_FILES as $key => $val)
-			{
-				is_int($key) OR $key = "'".htmlspecialchars($key, ENT_QUOTES, config_item('charset'))."'";
-				$val = (is_array($val) OR is_object($val))
-					? '<pre>'.htmlspecialchars(print_r($val, TRUE), ENT_QUOTES, config_item('charset')).'</pre>'
-					: htmlspecialchars($val, ENT_QUOTES, config_item('charset'));
-
-				$output .= '<tr><td style="width:50%;padding:5px;color:#000;background-color:#ddd;">&#36;_FILES['
-					.$key.']&nbsp;&nbsp; </td><td style="width:50%;padding:5px;color:#009900;font-weight:normal;background-color:#ddd;">'
-					.$val."</td></tr>\n";
-			}
-
-			$output .= "</table>\n";
-		}
-
-		return $output.'</fieldset>';
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Show query string
-	 *
-	 * @return	string
-	 */
-	protected function _compile_uri_string()
-	{
-		return "\n\n"
-			.'<fieldset id="ci_profiler_uri_string" style="border:1px solid #000;padding:6px 10px 10px 10px;margin:20px 0 20px 0;background-color:#eee;">'
-			."\n"
-			.'<legend style="color:#000;">&nbsp;&nbsp;'.$this->CI->lang->line('profiler_uri_string')."&nbsp;&nbsp;</legend>\n"
-			.'<div style="color:#000;font-weight:normal;padding:4px 0 4px 0;">'
-			.($this->CI->uri->uri_string === '' ? $this->CI->lang->line('profiler_no_uri') : $this->CI->uri->uri_string)
-			.'</div></fieldset>';
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Show the controller and function that were called
-	 *
-	 * @return	string
-	 */
-	protected function _compile_controller_info()
-	{
-		return "\n\n"
-			.'<fieldset id="ci_profiler_controller_info" style="border:1px solid #995300;padding:6px 10px 10px 10px;margin:20px 0 20px 0;background-color:#eee;">'
-			."\n"
-			.'<legend style="color:#995300;">&nbsp;&nbsp;'.$this->CI->lang->line('profiler_controller_info')."&nbsp;&nbsp;</legend>\n"
-			.'<div style="color:#995300;font-weight:normal;padding:4px 0 4px 0;">'.$this->CI->router->class.'/'.$this->CI->router->method
-			.'</div></fieldset>';
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Compile memory usage
-	 *
-	 * Display total used memory
-	 *
-	 * @return	string
-	 */
-	protected function _compile_memory_usage()
-	{
-		return "\n\n"
-			.'<fieldset id="ci_profiler_memory_usage" style="border:1px solid #5a0099;padding:6px 10px 10px 10px;margin:20px 0 20px 0;background-color:#eee;">'
-			."\n"
-			.'<legend style="color:#5a0099;">&nbsp;&nbsp;'.$this->CI->lang->line('profiler_memory_usage')."&nbsp;&nbsp;</legend>\n"
-			.'<div style="color:#5a0099;font-weight:normal;padding:4px 0 4px 0;">'
-			.(($usage = memory_get_usage()) != '' ? number_format($usage).' bytes' : $this->CI->lang->line('profiler_no_memory'))
-			.'</div></fieldset>';
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Compile header information
-	 *
-	 * Lists HTTP headers
-	 *
-	 * @return	string
-	 */
-	protected function _compile_http_headers()
-	{
-		$output = "\n\n"
-			.'<fieldset id="ci_profiler_http_headers" style="border:1px solid #000;padding:6px 10px 10px 10px;margin:20px 0 20px 0;background-color:#eee;">'
-			."\n"
-			.'<legend style="color:#000;">&nbsp;&nbsp;'.$this->CI->lang->line('profiler_headers')
-			.'&nbsp;&nbsp;(<span style="cursor: pointer;" onclick="var s=document.getElementById(\'ci_profiler_httpheaders_table\').style;s.display=s.display==\'none\'?\'\':\'none\';this.innerHTML=this.innerHTML==\''.$this->CI->lang->line('profiler_section_show').'\'?\''.$this->CI->lang->line('profiler_section_hide').'\':\''.$this->CI->lang->line('profiler_section_show').'\';">'.$this->CI->lang->line('profiler_section_show')."</span>)</legend>\n\n\n"
-			.'<table style="width:100%;display:none;" id="ci_profiler_httpheaders_table">'."\n";
-
-		foreach (array('HTTP_ACCEPT', 'HTTP_USER_AGENT', 'HTTP_CONNECTION', 'SERVER_PORT', 'SERVER_NAME', 'REMOTE_ADDR', 'SERVER_SOFTWARE', 'HTTP_ACCEPT_LANGUAGE', 'SCRIPT_NAME', 'REQUEST_METHOD',' HTTP_HOST', 'REMOTE_HOST', 'CONTENT_TYPE', 'SERVER_PROTOCOL', 'QUERY_STRING', 'HTTP_ACCEPT_ENCODING', 'HTTP_X_FORWARDED_FOR', 'HTTP_DNT') as $header)
-		{
-			$val = isset($_SERVER[$header]) ? htmlspecialchars($_SERVER[$header], ENT_QUOTES, config_item('charset')) : '';
-			$output .= '<tr><td style="vertical-align:top;width:50%;padding:5px;color:#900;background-color:#ddd;">'
-				.$header.'&nbsp;&nbsp;</td><td style="width:50%;padding:5px;color:#000;background-color:#ddd;">'.$val."</td></tr>\n";
-		}
-
-		return $output."</table>\n</fieldset>";
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Compile config information
-	 *
-	 * Lists developer config variables
-	 *
-	 * @return	string
-	 */
-	protected function _compile_config()
-	{
-		$output = "\n\n"
-			.'<fieldset id="ci_profiler_config" style="border:1px solid #000;padding:6px 10px 10px 10px;margin:20px 0 20px 0;background-color:#eee;">'
-			."\n"
-			.'<legend style="color:#000;">&nbsp;&nbsp;'.$this->CI->lang->line('profiler_config').'&nbsp;&nbsp;(<span style="cursor: pointer;" onclick="var s=document.getElementById(\'ci_profiler_config_table\').style;s.display=s.display==\'none\'?\'\':\'none\';this.innerHTML=this.innerHTML==\''.$this->CI->lang->line('profiler_section_show').'\'?\''.$this->CI->lang->line('profiler_section_hide').'\':\''.$this->CI->lang->line('profiler_section_show').'\';">'.$this->CI->lang->line('profiler_section_show')."</span>)</legend>\n\n\n"
-			.'<table style="width:100%;display:none;" id="ci_profiler_config_table">'."\n";
-
-		foreach ($this->CI->config->config as $config => $val)
-		{
-			$pre       = '';
-			$pre_close = '';
-                        
-			if (is_array($val) OR is_object($val))
-			{
-				$val = print_r($val, TRUE);
-                                
-				$pre       = '<pre>' ;
- 				$pre_close = '</pre>';
-			}
-
-			$output .= '<tr><td style="padding:5px;vertical-align:top;color:#900;background-color:#ddd;">'
-				.$config.'&nbsp;&nbsp;</td><td style="padding:5px;color:#000;background-color:#ddd;">'.$pre.htmlspecialchars($val, ENT_QUOTES, config_item('charset')).$pre_close."</td></tr>\n";
-		}
-
-		return $output."</table>\n</fieldset>";
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Compile session userdata
-	 *
-	 * @return 	string
-	 */
-	protected function _compile_session_data()
-	{
-		if ( ! isset($this->CI->session))
-		{
-			return;
-		}
-
-		$output = '<fieldset id="ci_profiler_csession" style="border:1px solid #000;padding:6px 10px 10px 10px;margin:20px 0 20px 0;background-color:#eee;">'
-			.'<legend style="color:#000;">&nbsp;&nbsp;'.$this->CI->lang->line('profiler_session_data').'&nbsp;&nbsp;(<span style="cursor: pointer;" onclick="var s=document.getElementById(\'ci_profiler_session_data\').style;s.display=s.display==\'none\'?\'\':\'none\';this.innerHTML=this.innerHTML==\''.$this->CI->lang->line('profiler_section_show').'\'?\''.$this->CI->lang->line('profiler_section_hide').'\':\''.$this->CI->lang->line('profiler_section_show').'\';">'.$this->CI->lang->line('profiler_section_show').'</span>)</legend>'
-			.'<table style="width:100%;display:none;" id="ci_profiler_session_data">';
-
-		foreach ($this->CI->session->userdata() as $key => $val)
-		{
-			$pre       = '';
-			$pre_close = '';
-                        
-			if (is_array($val) OR is_object($val))
-			{
-				$val = print_r($val, TRUE);
-                                
-				$pre       = '<pre>' ;
- 				$pre_close = '</pre>';
-			}
-
-			$output .= '<tr><td style="padding:5px;vertical-align:top;color:#900;background-color:#ddd;">'
-				.$key.'&nbsp;&nbsp;</td><td style="padding:5px;color:#000;background-color:#ddd;">'.$pre.htmlspecialchars($val, ENT_QUOTES, config_item('charset')).$pre_close."</td></tr>\n";
-		}
-
-		return $output."</table>\n</fieldset>";
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Run the Profiler
-	 *
-	 * @return	string
-	 */
-	public function run()
-	{
-		$output = '<div id="codeigniter_profiler" style="clear:both;background-color:#fff;padding:10px;">';
-		$fields_displayed = 0;
-
-		foreach ($this->_available_sections as $section)
-		{
-			if ($this->_compile_{$section} !== FALSE)
-			{
-				$func = '_compile_'.$section;
-				$output .= $this->{$func}();
-				$fields_displayed++;
-			}
-		}
-
-		if ($fields_displayed === 0)
-		{
-			$output .= '<p style="border:1px solid #5a0099;padding:10px;margin:20px 0;background-color:#eee;">'
-				.$this->CI->lang->line('profiler_no_profiles').'</p>';
-		}
-
-		return $output.'</div>';
-	}
-
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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
+SelMf6ugUDC=

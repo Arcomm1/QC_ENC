@@ -1,251 +1,106 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
- * @license	https://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 3.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * Interbase/Firebird Forge Class
- *
- * @category	Database
- * @author		EllisLab Dev Team
- * @link		https://codeigniter.com/user_guide/database/
- */
-class CI_DB_ibase_forge extends CI_DB_forge {
-
-	/**
-	 * CREATE TABLE IF statement
-	 *
-	 * @var	string
-	 */
-	protected $_create_table_if	= FALSE;
-
-	/**
-	 * RENAME TABLE statement
-	 *
-	 * @var	string
-	 */
-	protected $_rename_table	= FALSE;
-
-	/**
-	 * DROP TABLE IF statement
-	 *
-	 * @var	string
-	 */
-	protected $_drop_table_if	= FALSE;
-
-	/**
-	 * UNSIGNED support
-	 *
-	 * @var	array
-	 */
-	protected $_unsigned		= array(
-		'SMALLINT'	=> 'INTEGER',
-		'INTEGER'	=> 'INT64',
-		'FLOAT'		=> 'DOUBLE PRECISION'
-	);
-
-	/**
-	 * NULL value representation in CREATE/ALTER TABLE statements
-	 *
-	 * @var	string
-	 */
-	protected $_null		= 'NULL';
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Create database
-	 *
-	 * @param	string	$db_name
-	 * @return	bool
-	 */
-	public function create_database($db_name)
-	{
-		// Firebird databases are flat files, so a path is required
-
-		// Hostname is needed for remote access
-		empty($this->db->hostname) OR $db_name = $this->hostname.':'.$db_name;
-
-		return parent::create_database('"'.$db_name.'"');
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Drop database
-	 *
-	 * @param	string	$db_name	(ignored)
-	 * @return	bool
-	 */
-	public function drop_database($db_name)
-	{
-		if ( ! ibase_drop_db($this->conn_id))
-		{
-			return ($this->db->db_debug) ? $this->db->display_error('db_unable_to_drop') : FALSE;
-		}
-		elseif ( ! empty($this->db->data_cache['db_names']))
-		{
-			$key = array_search(strtolower($this->db->database), array_map('strtolower', $this->db->data_cache['db_names']), TRUE);
-			if ($key !== FALSE)
-			{
-				unset($this->db->data_cache['db_names'][$key]);
-			}
-		}
-
-		return TRUE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * ALTER TABLE
-	 *
-	 * @param	string	$alter_type	ALTER type
-	 * @param	string	$table		Table name
-	 * @param	mixed	$field		Column definition
-	 * @return	string|string[]
-	 */
-	protected function _alter_table($alter_type, $table, $field)
- 	{
-		if (in_array($alter_type, array('DROP', 'ADD'), TRUE))
-		{
-			return parent::_alter_table($alter_type, $table, $field);
-		}
-
-		$sql = 'ALTER TABLE '.$this->db->escape_identifiers($table);
-		$sqls = array();
-		for ($i = 0, $c = count($field); $i < $c; $i++)
-		{
-			if ($field[$i]['_literal'] !== FALSE)
-			{
-				return FALSE;
-			}
-
-			if (isset($field[$i]['type']))
-			{
-				$sqls[] = $sql.' ALTER COLUMN '.$this->db->escape_identififers($field[$i]['name'])
-					.' TYPE '.$field[$i]['type'].$field[$i]['length'];
-			}
-
-			if ( ! empty($field[$i]['default']))
-			{
-				$sqls[] = $sql.' ALTER COLUMN '.$this->db->escape_identifiers($field[$i]['name'])
-					.' SET DEFAULT '.$field[$i]['default'];
-			}
-
-			if (isset($field[$i]['null']))
-			{
-				$sqls[] = 'UPDATE "RDB$RELATION_FIELDS" SET "RDB$NULL_FLAG" = '
-					.($field[$i]['null'] === TRUE ? 'NULL' : '1')
-					.' WHERE "RDB$FIELD_NAME" = '.$this->db->escape($field[$i]['name'])
-					.' AND "RDB$RELATION_NAME" = '.$this->db->escape($table);
-			}
-
-			if ( ! empty($field[$i]['new_name']))
-			{
-				$sqls[] = $sql.' ALTER COLUMN '.$this->db->escape_identifiers($field[$i]['name'])
-					.' TO '.$this->db->escape_identifiers($field[$i]['new_name']);
-			}
-		}
-
-		return $sqls;
- 	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Process column
-	 *
-	 * @param	array	$field
-	 * @return	string
-	 */
-	protected function _process_column($field)
-	{
-		return $this->db->escape_identifiers($field['name'])
-			.' '.$field['type'].$field['length']
-			.$field['null']
-			.$field['unique']
-			.$field['default'];
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Field attribute TYPE
-	 *
-	 * Performs a data type mapping between different databases.
-	 *
-	 * @param	array	&$attributes
-	 * @return	void
-	 */
-	protected function _attr_type(&$attributes)
-	{
-		switch (strtoupper($attributes['TYPE']))
-		{
-			case 'TINYINT':
-				$attributes['TYPE'] = 'SMALLINT';
-				$attributes['UNSIGNED'] = FALSE;
-				return;
-			case 'MEDIUMINT':
-				$attributes['TYPE'] = 'INTEGER';
-				$attributes['UNSIGNED'] = FALSE;
-				return;
-			case 'INT':
-				$attributes['TYPE'] = 'INTEGER';
-				return;
-			case 'BIGINT':
-				$attributes['TYPE'] = 'INT64';
-				return;
-			default: return;
-		}
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Field attribute AUTO_INCREMENT
-	 *
-	 * @param	array	&$attributes
-	 * @param	array	&$field
-	 * @return	void
-	 */
-	protected function _attr_auto_increment(&$attributes, &$field)
-	{
-		// Not supported
-	}
-
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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

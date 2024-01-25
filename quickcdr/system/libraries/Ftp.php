@@ -1,667 +1,201 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
- * @license	https://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 1.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * FTP Class
- *
- * @package		CodeIgniter
- * @subpackage	Libraries
- * @category	Libraries
- * @author		EllisLab Dev Team
- * @link		https://codeigniter.com/user_guide/libraries/ftp.html
- */
-class CI_FTP {
-
-	/**
-	 * FTP Server hostname
-	 *
-	 * @var	string
-	 */
-	public $hostname = '';
-
-	/**
-	 * FTP Username
-	 *
-	 * @var	string
-	 */
-	public $username = '';
-
-	/**
-	 * FTP Password
-	 *
-	 * @var	string
-	 */
-	public $password = '';
-
-	/**
-	 * FTP Server port
-	 *
-	 * @var	int
-	 */
-	public $port = 21;
-
-	/**
-	 * Passive mode flag
-	 *
-	 * @var	bool
-	 */
-	public $passive = TRUE;
-
-	/**
-	 * Debug flag
-	 *
-	 * Specifies whether to display error messages.
-	 *
-	 * @var	bool
-	 */
-	public $debug = FALSE;
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Connection ID
-	 *
-	 * @var	resource
-	 */
-	protected $conn_id;
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Constructor
-	 *
-	 * @param	array	$config
-	 * @return	void
-	 */
-	public function __construct($config = array())
-	{
-		empty($config) OR $this->initialize($config);
-		log_message('info', 'FTP Class Initialized');
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Initialize preferences
-	 *
-	 * @param	array	$config
-	 * @return	void
-	 */
-	public function initialize($config = array())
-	{
-		foreach ($config as $key => $val)
-		{
-			if (isset($this->$key))
-			{
-				$this->$key = $val;
-			}
-		}
-
-		// Prep the hostname
-		$this->hostname = preg_replace('|.+?://|', '', $this->hostname);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * FTP Connect
-	 *
-	 * @param	array	 $config	Connection values
-	 * @return	bool
-	 */
-	public function connect($config = array())
-	{
-		if (count($config) > 0)
-		{
-			$this->initialize($config);
-		}
-
-		if (FALSE === ($this->conn_id = @ftp_connect($this->hostname, $this->port)))
-		{
-			if ($this->debug === TRUE)
-			{
-				$this->_error('ftp_unable_to_connect');
-			}
-
-			return FALSE;
-		}
-
-		if ( ! $this->_login())
-		{
-			if ($this->debug === TRUE)
-			{
-				$this->_error('ftp_unable_to_login');
-			}
-
-			return FALSE;
-		}
-
-		// Set passive mode if needed
-		if ($this->passive === TRUE)
-		{
-			ftp_pasv($this->conn_id, TRUE);
-		}
-
-		return TRUE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * FTP Login
-	 *
-	 * @return	bool
-	 */
-	protected function _login()
-	{
-		return @ftp_login($this->conn_id, $this->username, $this->password);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Validates the connection ID
-	 *
-	 * @return	bool
-	 */
-	protected function _is_conn()
-	{
-		if ( ! is_resource($this->conn_id))
-		{
-			if ($this->debug === TRUE)
-			{
-				$this->_error('ftp_no_connection');
-			}
-
-			return FALSE;
-		}
-
-		return TRUE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Change directory
-	 *
-	 * The second parameter lets us momentarily turn off debugging so that
-	 * this function can be used to test for the existence of a folder
-	 * without throwing an error. There's no FTP equivalent to is_dir()
-	 * so we do it by trying to change to a particular directory.
-	 * Internally, this parameter is only used by the "mirror" function below.
-	 *
-	 * @param	string	$path
-	 * @param	bool	$suppress_debug
-	 * @return	bool
-	 */
-	public function changedir($path, $suppress_debug = FALSE)
-	{
-		if ( ! $this->_is_conn())
-		{
-			return FALSE;
-		}
-
-		$result = @ftp_chdir($this->conn_id, $path);
-
-		if ($result === FALSE)
-		{
-			if ($this->debug === TRUE && $suppress_debug === FALSE)
-			{
-				$this->_error('ftp_unable_to_changedir');
-			}
-
-			return FALSE;
-		}
-
-		return TRUE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Create a directory
-	 *
-	 * @param	string	$path
-	 * @param	int	$permissions
-	 * @return	bool
-	 */
-	public function mkdir($path, $permissions = NULL)
-	{
-		if ($path === '' OR ! $this->_is_conn())
-		{
-			return FALSE;
-		}
-
-		$result = @ftp_mkdir($this->conn_id, $path);
-
-		if ($result === FALSE)
-		{
-			if ($this->debug === TRUE)
-			{
-				$this->_error('ftp_unable_to_mkdir');
-			}
-
-			return FALSE;
-		}
-
-		// Set file permissions if needed
-		if ($permissions !== NULL)
-		{
-			$this->chmod($path, (int) $permissions);
-		}
-
-		return TRUE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Upload a file to the server
-	 *
-	 * @param	string	$locpath
-	 * @param	string	$rempath
-	 * @param	string	$mode
-	 * @param	int	$permissions
-	 * @return	bool
-	 */
-	public function upload($locpath, $rempath, $mode = 'auto', $permissions = NULL)
-	{
-		if ( ! $this->_is_conn())
-		{
-			return FALSE;
-		}
-
-		if ( ! file_exists($locpath))
-		{
-			$this->_error('ftp_no_source_file');
-			return FALSE;
-		}
-
-		// Set the mode if not specified
-		if ($mode === 'auto')
-		{
-			// Get the file extension so we can set the upload type
-			$ext = $this->_getext($locpath);
-			$mode = $this->_settype($ext);
-		}
-
-		$mode = ($mode === 'ascii') ? FTP_ASCII : FTP_BINARY;
-
-		$result = @ftp_put($this->conn_id, $rempath, $locpath, $mode);
-
-		if ($result === FALSE)
-		{
-			if ($this->debug === TRUE)
-			{
-				$this->_error('ftp_unable_to_upload');
-			}
-
-			return FALSE;
-		}
-
-		// Set file permissions if needed
-		if ($permissions !== NULL)
-		{
-			$this->chmod($rempath, (int) $permissions);
-		}
-
-		return TRUE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Download a file from a remote server to the local server
-	 *
-	 * @param	string	$rempath
-	 * @param	string	$locpath
-	 * @param	string	$mode
-	 * @return	bool
-	 */
-	public function download($rempath, $locpath, $mode = 'auto')
-	{
-		if ( ! $this->_is_conn())
-		{
-			return FALSE;
-		}
-
-		// Set the mode if not specified
-		if ($mode === 'auto')
-		{
-			// Get the file extension so we can set the upload type
-			$ext = $this->_getext($rempath);
-			$mode = $this->_settype($ext);
-		}
-
-		$mode = ($mode === 'ascii') ? FTP_ASCII : FTP_BINARY;
-
-		$result = @ftp_get($this->conn_id, $locpath, $rempath, $mode);
-
-		if ($result === FALSE)
-		{
-			if ($this->debug === TRUE)
-			{
-				$this->_error('ftp_unable_to_download');
-			}
-
-			return FALSE;
-		}
-
-		return TRUE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Rename (or move) a file
-	 *
-	 * @param	string	$old_file
-	 * @param	string	$new_file
-	 * @param	bool	$move
-	 * @return	bool
-	 */
-	public function rename($old_file, $new_file, $move = FALSE)
-	{
-		if ( ! $this->_is_conn())
-		{
-			return FALSE;
-		}
-
-		$result = @ftp_rename($this->conn_id, $old_file, $new_file);
-
-		if ($result === FALSE)
-		{
-			if ($this->debug === TRUE)
-			{
-				$this->_error('ftp_unable_to_'.($move === FALSE ? 'rename' : 'move'));
-			}
-
-			return FALSE;
-		}
-
-		return TRUE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Move a file
-	 *
-	 * @param	string	$old_file
-	 * @param	string	$new_file
-	 * @return	bool
-	 */
-	public function move($old_file, $new_file)
-	{
-		return $this->rename($old_file, $new_file, TRUE);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Rename (or move) a file
-	 *
-	 * @param	string	$filepath
-	 * @return	bool
-	 */
-	public function delete_file($filepath)
-	{
-		if ( ! $this->_is_conn())
-		{
-			return FALSE;
-		}
-
-		$result = @ftp_delete($this->conn_id, $filepath);
-
-		if ($result === FALSE)
-		{
-			if ($this->debug === TRUE)
-			{
-				$this->_error('ftp_unable_to_delete');
-			}
-
-			return FALSE;
-		}
-
-		return TRUE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Delete a folder and recursively delete everything (including sub-folders)
-	 * contained within it.
-	 *
-	 * @param	string	$filepath
-	 * @return	bool
-	 */
-	public function delete_dir($filepath)
-	{
-		if ( ! $this->_is_conn())
-		{
-			return FALSE;
-		}
-
-		// Add a trailing slash to the file path if needed
-		$filepath = preg_replace('/(.+?)\/*$/', '\\1/', $filepath);
-
-		$list = $this->list_files($filepath);
-		if ( ! empty($list))
-		{
-			for ($i = 0, $c = count($list); $i < $c; $i++)
-			{
-				// If we can't delete the item it's probably a directory,
-				// so we'll recursively call delete_dir()
-				if ( ! preg_match('#/\.\.?$#', $list[$i]) && ! @ftp_delete($this->conn_id, $list[$i]))
-				{
-					$this->delete_dir($filepath.$list[$i]);
-				}
-			}
-		}
-
-		if (@ftp_rmdir($this->conn_id, $filepath) === FALSE)
-		{
-			if ($this->debug === TRUE)
-			{
-				$this->_error('ftp_unable_to_delete');
-			}
-
-			return FALSE;
-		}
-
-		return TRUE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Set file permissions
-	 *
-	 * @param	string	$path	File path
-	 * @param	int	$perm	Permissions
-	 * @return	bool
-	 */
-	public function chmod($path, $perm)
-	{
-		if ( ! $this->_is_conn())
-		{
-			return FALSE;
-		}
-
-		if (@ftp_chmod($this->conn_id, $perm, $path) === FALSE)
-		{
-			if ($this->debug === TRUE)
-			{
-				$this->_error('ftp_unable_to_chmod');
-			}
-
-			return FALSE;
-		}
-
-		return TRUE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * FTP List files in the specified directory
-	 *
-	 * @param	string	$path
-	 * @return	array
-	 */
-	public function list_files($path = '.')
-	{
-		return $this->_is_conn()
-			? ftp_nlist($this->conn_id, $path)
-			: FALSE;
-	}
-
-	// ------------------------------------------------------------------------
-
-	/**
-	 * Read a directory and recreate it remotely
-	 *
-	 * This function recursively reads a folder and everything it contains
-	 * (including sub-folders) and creates a mirror via FTP based on it.
-	 * Whatever the directory structure of the original file path will be
-	 * recreated on the server.
-	 *
-	 * @param	string	$locpath	Path to source with trailing slash
-	 * @param	string	$rempath	Path to destination - include the base folder with trailing slash
-	 * @return	bool
-	 */
-	public function mirror($locpath, $rempath)
-	{
-		if ( ! $this->_is_conn())
-		{
-			return FALSE;
-		}
-
-		// Open the local file path
-		if ($fp = @opendir($locpath))
-		{
-			// Attempt to open the remote file path and try to create it, if it doesn't exist
-			if ( ! $this->changedir($rempath, TRUE) && ( ! $this->mkdir($rempath) OR ! $this->changedir($rempath)))
-			{
-				return FALSE;
-			}
-
-			// Recursively read the local directory
-			while (FALSE !== ($file = readdir($fp)))
-			{
-				if (is_dir($locpath.$file) && $file[0] !== '.')
-				{
-					$this->mirror($locpath.$file.'/', $rempath.$file.'/');
-				}
-				elseif ($file[0] !== '.')
-				{
-					// Get the file extension so we can se the upload type
-					$ext = $this->_getext($file);
-					$mode = $this->_settype($ext);
-
-					$this->upload($locpath.$file, $rempath.$file, $mode);
-				}
-			}
-
-			return TRUE;
-		}
-
-		return FALSE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Extract the file extension
-	 *
-	 * @param	string	$filename
-	 * @return	string
-	 */
-	protected function _getext($filename)
-	{
-		return (($dot = strrpos($filename, '.')) === FALSE)
-			? 'txt'
-			: substr($filename, $dot + 1);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Set the upload type
-	 *
-	 * @param	string	$ext	Filename extension
-	 * @return	string
-	 */
-	protected function _settype($ext)
-	{
-		return in_array($ext, array('txt', 'text', 'php', 'phps', 'php4', 'js', 'css', 'htm', 'html', 'phtml', 'shtml', 'log', 'xml'), TRUE)
-			? 'ascii'
-			: 'binary';
-	}
-
-	// ------------------------------------------------------------------------
-
-	/**
-	 * Close the connection
-	 *
-	 * @return	bool
-	 */
-	public function close()
-	{
-		return $this->_is_conn()
-			? @ftp_close($this->conn_id)
-			: FALSE;
-	}
-
-	// ------------------------------------------------------------------------
-
-	/**
-	 * Display error message
-	 *
-	 * @param	string	$line
-	 * @return	void
-	 */
-	protected function _error($line)
-	{
-		$CI =& get_instance();
-		$CI->lang->load('ftp');
-		show_error($CI->lang->line($line));
-	}
-
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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
+iYnZbgMfbSbg2zyYGi+gU68YO0K9kzDXq8u=

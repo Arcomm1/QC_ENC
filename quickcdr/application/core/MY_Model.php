@@ -1,795 +1,298 @@
-<?php
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-
-class MY_model extends CI_Model
-{
-    /**
-     * Table name for model.
-     *
-     * Unless otherwise specified, table name is automatically guessed to be
-     * plural and lowercase of class name, including optional prefix stripping _model suffix.
-     */
-    protected $_table = "";
-
-
-    /**
-     * Table name prefix.
-     */
-    protected $_table_prefix = "";
-
-
-    /**
-     * List of required fields for model.
-     *
-     * If set, required fields will be checked for presence prior to inserting new row.
-     */
-    protected $_required_fields = array();
-
-
-    /**
-     * Primary key of the table.
-     */
-    protected $_pk = "id";
-
-
-    /**
-     * Soft deletion support.
-     */
-    protected $_soft_delete = false;
-
-
-    /**
-     * Soft delete key, expected to be TINYINT or INT.
-     */
-    protected $_soft_delete_key = 'deleted';
-
-
-    /**
-     * If soft delete is set, whether or not to return deleted rows in results.
-     */
-    protected $_with_deleted = false;
-
-
-    /**
-     * If soft delete is set, whether or not to return only deleted rows in results.
-     */
-    protected $_only_deleted = false;
-
-
-    /**
-     * Database group name, default is default
-     */
-    protected $_db_group = 'default';
-
-
-    /******************** PUBLIC METHODS **************************************/
-
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->load->helper('inflector');
-        if (!$this->_table) {
-            $this->_table = $this->_table_prefix.str_replace('_model', '', strtolower(plural(get_class($this))));
-        } else {
-            $this->_table = $this->_table_prefix.$this->_table;
-        }
-        $this->db = $this->load->database($this->_db_group, TRUE);
-    }
-
-
-    /**
-     * Get all rows, optionally ordering them
-     *
-     * @param string $by Column by which to order
-     * @param string $order Order of columns, either ASC, DESC or RAND()
-     *
-     * @return obj CodeIgniter database object
-     */
-    public function get_all($by = false, $order = 'DESC')
-    {
-
-        $this->_set_soft_delete_where();
-        if ($by) {
-            $this->db->order_by($by, $order);
-        }
-        return $this->db->get($this->_table)->result();
-    }
-
-
-    /**
-     * Get specific row by primary key
-     *
-     * @param int $id Primary key
-     * @return obj|bool CodeIgniter database object or false
-     */
-    public function get($id = false)
-    {
-        if (!$id) {
-            return false;
-        }
-        $this->db->where($this->_pk, $id);
-        return $this->db->get($this->_table)->row();
-    }
-
-
-    /**
-     * Get specific row matching simple WHERE clause
-     *
-     * @param string $column Column name
-     * @param string $value Column value
-     * @return obj|bool CodeIgniter database object or false
-     */
-    public function get_by($field = false, $value = false)
-    {
-        if (!$field || !$value) {
-            return false;
-        }
-        $this->_set_soft_delete_where();
-        if (is_array($value)) {
-            $this->db->where_in($field, $value);
-        } else {
-            $this->db->where($field, $value);
-        }
-        return $this->db->get($this->_table)->row();
-    }
-
-
-    /**
-     * Get specific row matching complex WHERE statement
-     *
-     * @param array $where Multidimensional array of column names and values
-     * @return obj|bool CodeIgniter database object or false
-     */
-    public function get_one_by_complex($where = false)
-    {
-        if (!$where || !is_array($where) || count($where) == 0) {
-            return false;
-        }
-        $this->_set_soft_delete_where();
-        foreach ($where as $field => $value) {
-            if ($value) {
-                if (is_array($value)) {
-                    $this->db->where_in($field, $value);
-                } else {
-                    $this->db->where($field, $value);
-                }
-            }
-        }
-
-        return $this->db->get($this->_table)->row();
-    }
-
-
-    /**
-     * Get multiple rows matching simple WHERE clause
-     *
-     * @param string $column Column name
-     * @param string $value Column value
-     * @return obj|bool CodeIgniter database object or false
-     */
-    public function get_many_by($field = false, $value = false)
-    {
-        if (!$field || !$value) {
-            return false;
-        }
-        $this->_set_soft_delete_where();
-        if (is_array($value)) {
-            $this->db->where_in($field, $value);
-        } else {
-            $this->db->where($field, $value);
-        }
-        return $this->db->get($this->_table)->result();
-    }
-
-
-    /**
-     * Get multiple rows matching complex WHERE statement
-     *
-     * @param array $where Multidimensional array of column names and values
-     * @return obj|bool CodeIgniter database object or false
-     */
-    public function get_many_by_complex($where = false)
-    {
-        if (!$where || !is_array($where) || count($where) == 0) {
-            return false;
-        }
-        $this->_set_soft_delete_where();
-        foreach ($where as $field => $value) {
-            if ($value) {
-                if (is_array($value)) {
-                    $this->db->where_in($field, $value);
-                } else {
-                    $this->db->where($field, $value);
-                }
-            }
-        }
-        return $this->db->get($this->_table)->result();
-    }
-
-
-    /**
-     * Create new row
-     *
-     * @param array $params Row data
-     * @return int ID of the new row
-     */
-    function create($params = false)
-    {
-        if (!$params || !is_array($params) || count($params) == 0) {
-            return 0;
-        }
-        if (count($this->_required_fields) > 0) {
-            foreach ($this->_required_fields as $field) {
-                if (!array_key_exists($field, $this->_required_fields)) {
-                    return 0;
-                }
-            }
-        }
-        $this->db->insert($this->_table, $params);
-        return $this->db->insert_id();
-    }
-
-
-    /**
-     * Create new rows
-     *
-     * @param array $params Array of arrays of Row data
-     * @return array Array of inserted row IDs
-     */
-    function create_many($rows = false)
-    {
-        $ids = array();
-        if (!$rows || !is_array($rows) || count($rows) == 0) {
-            return $ids;
-        }
-        foreach ($rows as $row) {
-            $id = $this->create($row);
-            if ($id > 0) {
-                array_push($ids, $id);
-            }
-        }
-        return $ids;
-    }
-
-
-    /**
-     * Update existing row by primary key
-     *
-     * @param int $id Row ID
-     * @param array $params row data
-     * @return int Number of affected rows
-     */
-    function update($id = false, $params = false)
-    {
-        if (!$id || !$params) {
-            return 0;
-        }
-        if (!is_array($params) || count($params) == 0) {
-            return 0;
-        }
-        $this->db->where($this->_pk, $id);
-        $this->db->update($this->_table, $params);
-        return $this->db->affected_rows();
-    }
-
-
-    /**
-     * Update row(s) matching simple WHERE clause
-     *
-     * @param string $field Column name
-     * @param string $value Column value
-     * @param array $params Row data
-     * @return int Number of updated rows
-     */
-    function update_by($field = false, $value = false, $params = false)
-    {
-        if (!$field || !$value || !$params) {
-            return 0;
-        }
-        if (!is_array($params) || count($params) == 0) {
-            return 0;
-        }
-        // print_r($params);
-        $this->db->where($field, $value);
-        $this->db->update($this->_table, $params);
-        return $this->db->affected_rows();
-    }
-
-
-    /**
-     * Update row(s) matching complex WHERE clause
-     *
-     * @param string $where Multidimensional array of column names and values
-     * @param array $params Row data
-     * @return int Number of updated rows
-     */
-    function update_by_complex($where = false, $params = false)
-    {
-        if (!$where || !$params) {
-            return 0;
-        }
-        if (!is_array($where) || count($where) == 0 || !is_array($params) || count($params) == 0) {
-            return 0;
-        }
-        foreach ($where as $field => $value) {
-            $this->db->where($field, $value);
-        }
-        $this->db->update($this->_table, $params);
-        return $this->db->affected_rows();
-    }
-
-
-    /**
-     * Delete specific row by primary key
-     *
-     * @param int $id Row ID
-     * @return int Number of deleted rows
-     */
-    public function delete($id = false)
-    {
-        if (!$id) {
-            return 0;
-        }
-        $this->db->where($this->_pk, $id);
-        if ($this->_soft_delete) {
-            $this->db->update($this->_table, array($this->_soft_delete_key => 1));
-        } else {
-            $this->db->delete($this->_table);
-        }
-        return $this->db->affected_rows();
-    }
-
-
-    /**
-     * Delete row(s) matching simple WHERE clause
-     *
-     * @param string $field Column name
-     * @param string $value Column data
-     * @return int Number of deleted rows
-     */
-    function delete_by($field = false, $value = false)
-    {
-        if (!$field || !$value) {
-            return 0;
-        }
-        $this->db->where($field, $value);
-        if ($this->_soft_delete === true) {
-            $this->db->update($this->_table, array($this->_soft_delete_key => 1));
-        } else {
-            $this->db->delete($this->_table);
-        }
-        return $this->db->affected_rows();
-    }
-
-
-    /**
-     * Delet row(s) matching more complex WHERE clause
-     *
-     * @param array $where Multidimensional array of column names and values
-     * @return int Number of deleted rows
-     */
-    function delete_by_complex($where = false)
-    {
-        if (!$where || !is_array($where) || count($where)) {
-            return 0;
-        }
-        foreach ($where as $field => $value) {
-            $this->db->where($field, $value);
-        }
-        if ($this->_soft_delete === true) {
-            $this->db->update($this->_table, array($this->_soft_delete_key => 1));
-        } else {
-            $this->db->delete($this->_table);
-        }
-        return $this->db->affected_rows();
-    }
-
-
-    /**
-     * Return count of all rows
-     *
-     * @param void
-     * @return int Number of rows
-     */
-    function count_all()
-    {
-        return $this->db->count_all($this->_table);
-    }
-
-
-    /**
-     * Count rows matching simple WHERE clause
-     *
-     * @param string $field Column name
-     * @param string $value Column value
-     * @return int Number of rows
-     */
-    function count_by($field = value, $value = value)
-    {
-        if (!$field || !$value) {
-            return 0;
-        }
-        $this->_set_soft_delete_where();
-        if (is_array($value)) {
-            $this->db->where_in($field, $value);
-        } else {
-            $this->db->where($field, $value);
-        }
-        return $this->db->count_all_results($this->_table);
-    }
-
-
-    /**
-     * Count rows matching complex WHERE clause
-     *
-     * @param array $where Multidimensional array of column names and values
-     * @return int Number of rows
-     */
-    function count_by_complex($where = false)
-    {
-        if (!$where || !is_array($where) || !count($where)) {
-            return 0;
-        }
-        $this->_set_soft_delete_where();
-        foreach ($where as $field => $value) {
-            if ($value) {
-                if (is_array($value)) {
-                    $this->db->where_in($field, $value);
-                } else {
-                    $this->db->where($field, $value);
-                }
-            }
-        }
-        return $this->db->count_all_results($this->_table);
-    }
-
-
-    /**
-     * Get sum of of specific column, matching simple WHERE clause
-     *
-     * @param string $sum Column name, which needs to be summed up
-     * @param string $field Column name to chich match
-     * @param string $value Value to be matched
-     * @return int Sum of specified column
-     */
-    public function sum_by($sum = false, $field = false, $value = false)
-    {
-        if (!$sum || $field || $value) {
-            return 0;
-        }
-        $this->db->select_sum($sum);
-        $this->_set_soft_delete_where();
-        if (is_array($value)) {
-            $this->db->where_in($field, $value);
-        } else {
-            $this->db->where($field, $value);
-        }
-        $r = $this->db->get($this->_table)->row();
-        return $r->$sum;
-    }
-
-
-    /**
-     * Get sum of of specific column, matching simple WHERE clause
-     *
-     * @param string $sum Column name, which needs to be summed up
-     * @param string $where Multidimensional array of column names and values
-     * @return int Sum of specified column
-     */
-    public function sum_by_complex($sum = false, $where = false)
-    {
-
-        if (!$sum || !$where) {
-            return 0;
-        }
-        $this->db->select_sum($sum);
-        $this->_set_soft_delete_where();
-        foreach ($where as $field => $value) {
-            if ($value) {
-                if (is_array($value)) {
-                    $this->db->where_in($field, $value);
-                } else {
-                    $this->db->where($field, $value);
-                }
-            }
-        }
-        $r = $this->db->get($this->_table)->row();
-        return $r->$sum;
-    }
-
-
-    /**
-     * Get avg of of specific column, matching simple WHERE clause
-     *
-     * @param string $avg Column name, which needs to be averaged
-     * @param string $field Column name to chich match
-     * @param string $value Value to be matched
-     * @param string|bool $round Whether to round to FLOOR, CEIL, or to not round at all
-     * @return int Average of specified column
-     */
-    public function avg_by($avg = false, $field = false, $value = false, $round = 'FLOOR')
-    {
-        if (!$avg || !$field || $value) {
-            return 0;
-        }
-        $this->db->select_avg($avg);
-        $this->_set_soft_delete_where();
-        if (is_array($value)) {
-            $this->db->where_in($field, $value);
-        } else {
-            $this->db->where($field, $value);
-        }
-        $r = $this->db->get($this->_table)->row();
-
-        if ($round == 'FLOOR')  { return floor($r->$avg); }
-        if ($round == 'CEIL')   { return ceil($r->$avg); }
-        return $r->$avg;
-    }
-
-
-    /**
-     * Get avg of of specific column, matching simple WHERE clause
-     *
-     * @param string $avg Column name, which needs to be averaged
-     * @param string $where Multidimensional array of column names and values
-     * @param string|bool $round Whether to round to FLOOR, CEIL, or to not round at all
-     * @return int Average of specified column
-     */
-    public function avg_by_complex($avg = false, $where = false, $round = 'FLOOR')
-    {
-
-        if (!isset($avg) || !isset($where)) {
-            return 0;
-        }
-        $this->db->select_avg($avg);
-        $this->_set_soft_delete_where();
-        foreach ($where as $field => $value) {
-            if ($value) {
-                if (is_array($value)) {
-                    $this->db->where_in($field, $value);
-                } else {
-                    $this->db->where($field, $value);
-                }
-            }
-        }
-        $r = $this->db->get($this->_table)->row();
-
-        if ($round == 'FLOOR')  { return floor($r->$avg); }
-        if ($round == 'CEIL')   { return ceil($r->$avg); }
-        return $r->$avg;
-    }
-
-
-    /**
-     * Get max of of specific column, matching simple WHERE clause
-     *
-     * @param string $max Column name, which needs to be averaged
-     * @param string $field Column name to chich match
-     * @param string $value Value to be matched
-     * @param string|bool $round Whether to round to FLOOR, CEIL, or to not round at all
-     * @return int Average of specified column
-     */
-    public function max_by($max = false, $field = false, $value = false, $round = 'FLOOR')
-    {
-        if (!$max || !$field || $value) {
-            return 0;
-        }
-        $this->db->select_max($max);
-        $this->_set_soft_delete_where();
-        if (is_array($value)) {
-            $this->db->where_in($field, $value);
-        } else {
-            $this->db->where($field, $value);
-        }
-        $r = $this->db->get($this->_table)->row();
-
-        return $r->$max;
-    }
-
-
-    /**
-     * Get max of of specific column, matching simple WHERE clause
-     *
-     * @param string $max Column name, which needs to be averaged
-     * @param string $where Multidimensional array of column names and values
-     * @param string|bool $round Whether to round to FLOOR, CEIL, or to not round at all
-     * @return int Average of specified column
-     */
-    public function max_by_complex($max = false, $where = false, $round = 'FLOOR')
-    {
-
-        if (!isset($max) || !isset($where)) {
-            return 0;
-        }
-        $this->db->select_max($max);
-        $this->_set_soft_delete_where();
-        foreach ($where as $field => $value) {
-            if ($value) {
-                if (is_array($value)) {
-                    $this->db->where_in($field, $value);
-                } else {
-                    $this->db->where($field, $value);
-                }
-            }
-        }
-        $r = $this->db->get($this->_table)->row();
-
-        return $r->$max;
-    }
-
-
-    /**
-     * Get list of uniqued fields
-     *
-     * @param string $field Field name
-     * @return obj|bool Codeigniter database result object, false on error
-     */
-    public function get_unique_fields($field = false)
-    {
-        if (!$field) {
-            return false;
-        }
-        $this->db->select($field);
-        $this->db->where("$field IS NOT NULL", NULL, FALSE);
-        $this->db->group_by($field);
-        return $this->db->get($this->_table)->result();
-    }
-
-
-    /**
-     * Check if entry with specified primary key exists
-     *
-     * @param string $id Row ID
-     *
-     * @return bool
-     */
-    public function exists($id = false)
-    {
-        if (!isset($id)) {
-            return false;
-        }
-        if ($this->count_by($this->_pk, $id) > 0) {
-            return true;
-        }
-        return false;
-    }
-
-
-    /**
-     * Check if entry with specified field name exists
-     *
-     * @param string $field Field name
-     * @param string $value Value to check against
-     *
-     * @return bool
-     */
-    public function exists_by($field = false, $value = false)
-    {
-        if (!isset($field) || !isset($value)) {
-            return false;
-        }
-        if ($this->count_by($field, $value) > 0) {
-            return true;
-        }
-        return false;
-    }
-
-
-    /**
-     * Include soft deleted rows for next call
-     *
-     * @param void
-     * @return object Self
-     */
-    public function with_deleted()
-    {
-        $this->_with_deleted = true;
-        return $this;
-    }
-
-
-    /**
-     * Include only soft deleted rows for next call
-     *
-     * @param void
-     * @return object Self
-     */
-    public function only_deleted()
-    {
-        $this->_only_deleted = true;
-        return $this;
-    }
-
-
-    /******************** PRIVATE METHODS *************************************/
-
-
-    private function _set_soft_delete_where()
-    {
-        if ($this->_soft_delete === true & $this->_only_deleted === true) {
-            $this->db->where($this->_soft_delete_key, 1);
-        }
-        if ($this->_soft_delete === true & $this->_with_deleted === false) {
-            $this->db->where($this->_soft_delete_key, 0);
-        }
-    }
-
-
-    /******************** UTILITY METHODS *************************************/
-
-
-    /**
-     * Return table name
-     *
-     * @param void
-     * @return string Table name
-     */
-    public function get_table()
-    {
-        return $this->_table;
-    }
-
-
-    /**
-     * Return table prefix
-     *
-     * @param void
-     * @return string Table prefix
-     */
-    public function get_table_prefix()
-    {
-        return $this->_table_prefix;
-    }
-
-
-    /**
-     * Return tables primary key
-     *
-     * @param void
-     * @return string Primary key
-     */
-    public function get_primary_key()
-    {
-        return $this->_pk;
-    }
-
-
-    /**
-     * Get required fields
-     *
-     * @param void
-     * @return array List of required fields
-     */
-    public function get_required_fields()
-    {
-        return $this->_required_fields;
-    }
-
-
-    /**
-     * Get soft delete
-     *
-     * @param void
-     * @return bool Soft delete
-     */
-    public function get_soft_delete()
-    {
-        return $this->_soft_delete;
-    }
-
-
-    /**
-     * Get soft delete key
-     *
-     * @param void
-     * @return string Soft delete key
-     */
-    public function get_soft_delete_key()
-    {
-        return $this->_soft_delete_key;
-    }
-
-
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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

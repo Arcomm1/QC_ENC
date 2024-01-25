@@ -1,150 +1,90 @@
-<?php
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-
-class Call_model extends MY_Model {
-
-
-    public function __construct()
-    {
-        $this->_table = 'cdr';
-        $this->_db_group = 'asteriskcdrdb';
-        parent::__construct();
-    }
-
-
-    /**
-     * Search calls
-     *
-     * @param array $limit_extensions List of extensions to which limit search
-     * @param array $where Array of values to match with WHERE clause
-     * @param array $like  Array of values to match with LIKE clause
-     * @param int $limit Limit for pagination
-     * @param int $offset Offset for pagination
-     * @param bool Whether random calls should be returned
-     * @return obj CodeIgniter database object
-     */
-    public function search($limit_extensions = array(), $where = false, $like = false, $offset = false, $limit = false, $random = false)
-    {
-        if ($where and is_array($where)) {
-            foreach ($where as $column => $value) {
-                if ($value) {
-                    if (is_array($value)) {
-                        $this->db->where_in($column, $value);
-                    } else {
-                        $this->db->where($column, $value);
-                    }
-                }
-            }
-        }
-
-        if ($like and is_array($like)) {
-            foreach ($like as $column => $value) {
-                if ($value) {
-                    if (is_array($value)) {
-                        $this->db->group_start();
-                        foreach ($value as $v) {
-                            $this->db->or_like($column, $v);
-                        }
-                        $this->db->group_end();
-                    } else {
-                        $this->db->like($column, $value);
-                    }
-                }
-            }
-        }
-
-        if (count($limit_extensions) > 0) {
-            $this->db->group_start();
-            $this->db->or_where_in('src', $limit_extensions);
-            $this->db->or_where_in('dst', $limit_extensions);
-            $this->db->group_end();
-        }
-
-        $this->db->where('dst !=', 's');
-
-        // $this->db->where('dcontext !=', 'ext-queues');
-
-        if ($offset) {
-            $this->db->limit($offset, $limit);
-        }
-        if ($random) {
-            $this->db->order_by('RAND()');
-        } else {
-            $this->db->order_by('calldate DESC');
-        }
-
-
-        // die($this->db->get_compiled_select());
-        return $this->db->get($this->_table)->result();
-    }
-
-
-    /**
-     * Count CDRs
-     *
-     * @param array $limit_extensions List of extensions to which limit search
-     * @param array $where Array of values to match with WHERE clause
-     * @param array $like  Array of values to match with LIKE clause
-     * @return obj CodeIgniter database object
-     */
-    public function count($limit_extensions = array(), $where = false, $where_not_in = false, $like = false)
-    {
-        if ($where and is_array($where)) {
-            foreach ($where as $column => $value) {
-                if ($value) {
-                    if (is_array($value)) {
-                        $this->db->where_in($column, $value);
-                    } else {
-                        $this->db->where($column, $value);
-                    }
-                }
-            }
-        }
-
-        if ($where_not_in and is_array($where_not_in)) {
-            foreach ($where_not_in as $column => $value) {
-                if ($value) {
-                    if (is_array($value)) {
-                        $this->db->where_not_in($column, $value);
-                    } else {
-                        $this->db->where_not($column, $value);
-                    }
-                }
-            }
-        }
-
-        if ($like and is_array($like)) {
-            foreach ($like as $column => $value) {
-                if ($value) {
-                    if (is_array($value)) {
-                        $this->db->group_start();
-                        foreach ($value as $v) {
-                            $this->db->or_like($column, $v);
-                        }
-                        $this->db->group_end();
-                    } else {
-                        $this->db->like($column, $value);
-                    }
-                }
-            }
-        }
-        $this->db->from($this->_table);
-
-        if (count($limit_extensions) > 0) {
-            $this->db->group_start();
-            $this->db->or_where_in('src', $limit_extensions);
-            $this->db->or_where_in('dst', $limit_extensions);
-            $this->db->group_end();
-        }
-        // $this->db->order_by('id DESC');
-        $this->db->where('dst !=', 's');
-
-        // $this->db->where('dcontext !=', 'ext-queues');
-
-        // die($this->db->get_compiled_select());
-        return $this->db->count_all_results();
-    }
-
-
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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
+vnBT+b49192zZVM/j/XlpW==

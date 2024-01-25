@@ -1,567 +1,259 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
- * @license	https://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 1.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * CodeIgniter Text Helpers
- *
- * @package		CodeIgniter
- * @subpackage	Helpers
- * @category	Helpers
- * @author		EllisLab Dev Team
- * @link		https://codeigniter.com/user_guide/helpers/text_helper.html
- */
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('word_limiter'))
-{
-	/**
-	 * Word Limiter
-	 *
-	 * Limits a string to X number of words.
-	 *
-	 * @param	string
-	 * @param	int
-	 * @param	string	the end character. Usually an ellipsis
-	 * @return	string
-	 */
-	function word_limiter($str, $limit = 100, $end_char = '&#8230;')
-	{
-		if (trim($str) === '')
-		{
-			return $str;
-		}
-
-		preg_match('/^\s*+(?:\S++\s*+){1,'.(int) $limit.'}/', $str, $matches);
-
-		if (strlen($str) === strlen($matches[0]))
-		{
-			$end_char = '';
-		}
-
-		return rtrim($matches[0]).$end_char;
-	}
-}
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('character_limiter'))
-{
-	/**
-	 * Character Limiter
-	 *
-	 * Limits the string based on the character count.  Preserves complete words
-	 * so the character count may not be exactly as specified.
-	 *
-	 * @param	string
-	 * @param	int
-	 * @param	string	the end character. Usually an ellipsis
-	 * @return	string
-	 */
-	function character_limiter($str, $n = 500, $end_char = '&#8230;')
-	{
-		if (mb_strlen($str) < $n)
-		{
-			return $str;
-		}
-
-		// a bit complicated, but faster than preg_replace with \s+
-		$str = preg_replace('/ {2,}/', ' ', str_replace(array("\r", "\n", "\t", "\v", "\f"), ' ', $str));
-
-		if (mb_strlen($str) <= $n)
-		{
-			return $str;
-		}
-
-		$out = '';
-		foreach (explode(' ', trim($str)) as $val)
-		{
-			$out .= $val.' ';
-
-			if (mb_strlen($out) >= $n)
-			{
-				$out = trim($out);
-				return (mb_strlen($out) === mb_strlen($str)) ? $out : $out.$end_char;
-			}
-		}
-	}
-}
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('ascii_to_entities'))
-{
-	/**
-	 * High ASCII to Entities
-	 *
-	 * Converts high ASCII text and MS Word special characters to character entities
-	 *
-	 * @param	string	$str
-	 * @return	string
-	 */
-	function ascii_to_entities($str)
-	{
-		$out = '';
-		$length = defined('MB_OVERLOAD_STRING')
-			? mb_strlen($str, '8bit') - 1
-			: strlen($str) - 1;
-		for ($i = 0, $count = 1, $temp = array(); $i <= $length; $i++)
-		{
-			$ordinal = ord($str[$i]);
-
-			if ($ordinal < 128)
-			{
-				/*
-					If the $temp array has a value but we have moved on, then it seems only
-					fair that we output that entity and restart $temp before continuing. -Paul
-				*/
-				if (count($temp) === 1)
-				{
-					$out .= '&#'.array_shift($temp).';';
-					$count = 1;
-				}
-
-				$out .= $str[$i];
-			}
-			else
-			{
-				if (count($temp) === 0)
-				{
-					$count = ($ordinal < 224) ? 2 : 3;
-				}
-
-				$temp[] = $ordinal;
-
-				if (count($temp) === $count)
-				{
-					$number = ($count === 3)
-						? (($temp[0] % 16) * 4096) + (($temp[1] % 64) * 64) + ($temp[2] % 64)
-						: (($temp[0] % 32) * 64) + ($temp[1] % 64);
-
-					$out .= '&#'.$number.';';
-					$count = 1;
-					$temp = array();
-				}
-				// If this is the last iteration, just output whatever we have
-				elseif ($i === $length)
-				{
-					$out .= '&#'.implode(';', $temp).';';
-				}
-			}
-		}
-
-		return $out;
-	}
-}
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('entities_to_ascii'))
-{
-	/**
-	 * Entities to ASCII
-	 *
-	 * Converts character entities back to ASCII
-	 *
-	 * @param	string
-	 * @param	bool
-	 * @return	string
-	 */
-	function entities_to_ascii($str, $all = TRUE)
-	{
-		if (preg_match_all('/\&#(\d+)\;/', $str, $matches))
-		{
-			for ($i = 0, $s = count($matches[0]); $i < $s; $i++)
-			{
-				$digits = $matches[1][$i];
-				$out = '';
-
-				if ($digits < 128)
-				{
-					$out .= chr($digits);
-
-				}
-				elseif ($digits < 2048)
-				{
-					$out .= chr(192 + (($digits - ($digits % 64)) / 64)).chr(128 + ($digits % 64));
-				}
-				else
-				{
-					$out .= chr(224 + (($digits - ($digits % 4096)) / 4096))
-						.chr(128 + ((($digits % 4096) - ($digits % 64)) / 64))
-						.chr(128 + ($digits % 64));
-				}
-
-				$str = str_replace($matches[0][$i], $out, $str);
-			}
-		}
-
-		if ($all)
-		{
-			return str_replace(
-				array('&amp;', '&lt;', '&gt;', '&quot;', '&apos;', '&#45;'),
-				array('&', '<', '>', '"', "'", '-'),
-				$str
-			);
-		}
-
-		return $str;
-	}
-}
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('word_censor'))
-{
-	/**
-	 * Word Censoring Function
-	 *
-	 * Supply a string and an array of disallowed words and any
-	 * matched words will be converted to #### or to the replacement
-	 * word you've submitted.
-	 *
-	 * @param	string	the text string
-	 * @param	string	the array of censored words
-	 * @param	string	the optional replacement value
-	 * @return	string
-	 */
-	function word_censor($str, $censored, $replacement = '')
-	{
-		if ( ! is_array($censored))
-		{
-			return $str;
-		}
-
-		$str = ' '.$str.' ';
-
-		// \w, \b and a few others do not match on a unicode character
-		// set for performance reasons. As a result words like über
-		// will not match on a word boundary. Instead, we'll assume that
-		// a bad word will be bookeneded by any of these characters.
-		$delim = '[-_\'\"`(){}<>\[\]|!?@#%&,.:;^~*+=\/ 0-9\n\r\t]';
-
-		foreach ($censored as $badword)
-		{
-			$badword = str_replace('\*', '\w*?', preg_quote($badword, '/'));
-			if ($replacement !== '')
-			{
-				$str = preg_replace(
-					"/({$delim})(".$badword.")({$delim})/i",
-					"\\1{$replacement}\\3",
-					$str
-				);
-			}
-			elseif (preg_match_all("/{$delim}(".$badword."){$delim}/i", $str, $matches, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE))
-			{
-				$matches = $matches[1];
-				for ($i = count($matches) - 1; $i >= 0; $i--)
-				{
-					$length = strlen($matches[$i][0]);
-					$str = substr_replace(
-						$str,
-						str_repeat('#', $length),
-						$matches[$i][1],
-						$length
-					);
-				}
-			}
-		}
-
-		return trim($str);
-	}
-}
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('highlight_code'))
-{
-	/**
-	 * Code Highlighter
-	 *
-	 * Colorizes code strings
-	 *
-	 * @param	string	the text string
-	 * @return	string
-	 */
-	function highlight_code($str)
-	{
-		/* The highlight string function encodes and highlights
-		 * brackets so we need them to start raw.
-		 *
-		 * Also replace any existing PHP tags to temporary markers
-		 * so they don't accidentally break the string out of PHP,
-		 * and thus, thwart the highlighting.
-		 */
-		$str = str_replace(
-			array('&lt;', '&gt;', '<?', '?>', '<%', '%>', '\\', '</script>'),
-			array('<', '>', 'phptagopen', 'phptagclose', 'asptagopen', 'asptagclose', 'backslashtmp', 'scriptclose'),
-			$str
-		);
-
-		// The highlight_string function requires that the text be surrounded
-		// by PHP tags, which we will remove later
-		$str = highlight_string('<?php '.$str.' ?>', TRUE);
-
-		// Remove our artificially added PHP, and the syntax highlighting that came with it
-		$str = preg_replace(
-			array(
-				'/<span style="color: #([A-Z0-9]+)">&lt;\?php(&nbsp;| )/i',
-				'/(<span style="color: #[A-Z0-9]+">.*?)\?&gt;<\/span>\n<\/span>\n<\/code>/is',
-				'/<span style="color: #[A-Z0-9]+"\><\/span>/i'
-			),
-			array(
-				'<span style="color: #$1">',
-				"$1</span>\n</span>\n</code>",
-				''
-			),
-			$str
-		);
-
-		// Replace our markers back to PHP tags.
-		return str_replace(
-			array('phptagopen', 'phptagclose', 'asptagopen', 'asptagclose', 'backslashtmp', 'scriptclose'),
-			array('&lt;?', '?&gt;', '&lt;%', '%&gt;', '\\', '&lt;/script&gt;'),
-			$str
-		);
-	}
-}
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('highlight_phrase'))
-{
-	/**
-	 * Phrase Highlighter
-	 *
-	 * Highlights a phrase within a text string
-	 *
-	 * @param	string	$str		the text string
-	 * @param	string	$phrase		the phrase you'd like to highlight
-	 * @param	string	$tag_open	the openging tag to precede the phrase with
-	 * @param	string	$tag_close	the closing tag to end the phrase with
-	 * @return	string
-	 */
-	function highlight_phrase($str, $phrase, $tag_open = '<mark>', $tag_close = '</mark>')
-	{
-		return ($str !== '' && $phrase !== '')
-			? preg_replace('/('.preg_quote($phrase, '/').')/i'.(UTF8_ENABLED ? 'u' : ''), $tag_open.'\\1'.$tag_close, $str)
-			: $str;
-	}
-}
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('convert_accented_characters'))
-{
-	/**
-	 * Convert Accented Foreign Characters to ASCII
-	 *
-	 * @param	string	$str	Input string
-	 * @return	string
-	 */
-	function convert_accented_characters($str)
-	{
-		static $array_from, $array_to;
-
-		if ( ! is_array($array_from))
-		{
-			if (file_exists(APPPATH.'config/foreign_chars.php'))
-			{
-				include(APPPATH.'config/foreign_chars.php');
-			}
-
-			if (file_exists(APPPATH.'config/'.ENVIRONMENT.'/foreign_chars.php'))
-			{
-				include(APPPATH.'config/'.ENVIRONMENT.'/foreign_chars.php');
-			}
-
-			if (empty($foreign_characters) OR ! is_array($foreign_characters))
-			{
-				$array_from = array();
-				$array_to = array();
-
-				return $str;
-			}
-
-			$array_from = array_keys($foreign_characters);
-			$array_to = array_values($foreign_characters);
-		}
-
-		return preg_replace($array_from, $array_to, $str);
-	}
-}
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('word_wrap'))
-{
-	/**
-	 * Word Wrap
-	 *
-	 * Wraps text at the specified character. Maintains the integrity of words.
-	 * Anything placed between {unwrap}{/unwrap} will not be word wrapped, nor
-	 * will URLs.
-	 *
-	 * @param	string	$str		the text string
-	 * @param	int	$charlim = 76	the number of characters to wrap at
-	 * @return	string
-	 */
-	function word_wrap($str, $charlim = 76)
-	{
-		// Set the character limit
-		is_numeric($charlim) OR $charlim = 76;
-
-		// Reduce multiple spaces
-		$str = preg_replace('| +|', ' ', $str);
-
-		// Standardize newlines
-		if (strpos($str, "\r") !== FALSE)
-		{
-			$str = str_replace(array("\r\n", "\r"), "\n", $str);
-		}
-
-		// If the current word is surrounded by {unwrap} tags we'll
-		// strip the entire chunk and replace it with a marker.
-		$unwrap = array();
-		if (preg_match_all('|\{unwrap\}(.+?)\{/unwrap\}|s', $str, $matches))
-		{
-			for ($i = 0, $c = count($matches[0]); $i < $c; $i++)
-			{
-				$unwrap[] = $matches[1][$i];
-				$str = str_replace($matches[0][$i], '{{unwrapped'.$i.'}}', $str);
-			}
-		}
-
-		// Use PHP's native function to do the initial wordwrap.
-		// We set the cut flag to FALSE so that any individual words that are
-		// too long get left alone. In the next step we'll deal with them.
-		$str = wordwrap($str, $charlim, "\n", FALSE);
-
-		// Split the string into individual lines of text and cycle through them
-		$output = '';
-		foreach (explode("\n", $str) as $line)
-		{
-			// Is the line within the allowed character count?
-			// If so we'll join it to the output and continue
-			if (mb_strlen($line) <= $charlim)
-			{
-				$output .= $line."\n";
-				continue;
-			}
-
-			$temp = '';
-			while (mb_strlen($line) > $charlim)
-			{
-				// If the over-length word is a URL we won't wrap it
-				if (preg_match('!\[url.+\]|://|www\.!', $line))
-				{
-					break;
-				}
-
-				// Trim the word down
-				$temp .= mb_substr($line, 0, $charlim - 1);
-				$line = mb_substr($line, $charlim - 1);
-			}
-
-			// If $temp contains data it means we had to split up an over-length
-			// word into smaller chunks so we'll add it back to our current line
-			if ($temp !== '')
-			{
-				$output .= $temp."\n".$line."\n";
-			}
-			else
-			{
-				$output .= $line."\n";
-			}
-		}
-
-		// Put our markers back
-		if (count($unwrap) > 0)
-		{
-			foreach ($unwrap as $key => $val)
-			{
-				$output = str_replace('{{unwrapped'.$key.'}}', $val, $output);
-			}
-		}
-
-		return $output;
-	}
-}
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('ellipsize'))
-{
-	/**
-	 * Ellipsize String
-	 *
-	 * This function will strip tags from a string, split it at its max_length and ellipsize
-	 *
-	 * @param	string	string to ellipsize
-	 * @param	int	max length of string
-	 * @param	mixed	int (1|0) or float, .5, .2, etc for position to split
-	 * @param	string	ellipsis ; Default '...'
-	 * @return	string	ellipsized string
-	 */
-	function ellipsize($str, $max_length, $position = 1, $ellipsis = '&hellip;')
-	{
-		// Strip tags
-		$str = trim(strip_tags($str));
-
-		// Is the string long enough to ellipsize?
-		if (mb_strlen($str) <= $max_length)
-		{
-			return $str;
-		}
-
-		$beg = mb_substr($str, 0, floor($max_length * $position));
-		$position = ($position > 1) ? 1 : $position;
-
-		if ($position === 1)
-		{
-			$end = mb_substr($str, 0, -($max_length - mb_strlen($beg)));
-		}
-		else
-		{
-			$end = mb_substr($str, -($max_length - mb_strlen($beg)));
-		}
-
-		return $beg.$ellipsis.$end;
-	}
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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

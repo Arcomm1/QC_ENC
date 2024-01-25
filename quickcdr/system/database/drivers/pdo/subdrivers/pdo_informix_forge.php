@@ -1,163 +1,61 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
- * @license	https://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 3.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * PDO Informix Forge Class
- *
- * @category	Database
- * @author		EllisLab Dev Team
- * @link		https://codeigniter.com/user_guide/database/
- */
-class CI_DB_pdo_informix_forge extends CI_DB_pdo_forge {
-
-	/**
-	 * RENAME TABLE statement
-	 *
-	 * @var	string
-	 */
-	protected $_rename_table	= 'RENAME TABLE %s TO %s';
-
-	/**
-	 * UNSIGNED support
-	 *
-	 * @var	array
-	 */
-	protected $_unsigned		= array(
-		'SMALLINT'	=> 'INTEGER',
-		'INT'		=> 'BIGINT',
-		'INTEGER'	=> 'BIGINT',
-		'REAL'		=> 'DOUBLE PRECISION',
-		'SMALLFLOAT'	=> 'DOUBLE PRECISION'
-	);
-
-	/**
-	 * DEFAULT value representation in CREATE/ALTER TABLE statements
-	 *
-	 * @var	string
-	 */
-	protected $_default		= ', ';
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * ALTER TABLE
-	 *
-	 * @param	string	$alter_type	ALTER type
-	 * @param	string	$table		Table name
-	 * @param	mixed	$field		Column definition
-	 * @return	string|string[]
-	 */
-	protected function _alter_table($alter_type, $table, $field)
-	{
-		if ($alter_type === 'CHANGE')
-		{
-			$alter_type = 'MODIFY';
-		}
-
-		return parent::_alter_table($alter_type, $table, $field);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Field attribute TYPE
-	 *
-	 * Performs a data type mapping between different databases.
-	 *
-	 * @param	array	&$attributes
-	 * @return	void
-	 */
-	protected function _attr_type(&$attributes)
-	{
-		switch (strtoupper($attributes['TYPE']))
-		{
-			case 'TINYINT':
-				$attributes['TYPE'] = 'SMALLINT';
-				$attributes['UNSIGNED'] = FALSE;
-				return;
-			case 'MEDIUMINT':
-				$attributes['TYPE'] = 'INTEGER';
-				$attributes['UNSIGNED'] = FALSE;
-				return;
-			case 'BYTE':
-			case 'TEXT':
-			case 'BLOB':
-			case 'CLOB':
-				$attributes['UNIQUE'] = FALSE;
-				if (isset($attributes['DEFAULT']))
-				{
-					unset($attributes['DEFAULT']);
-				}
-				return;
-			default: return;
-		}
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Field attribute UNIQUE
-	 *
-	 * @param	array	&$attributes
-	 * @param	array	&$field
-	 * @return	void
-	 */
-	protected function _attr_unique(&$attributes, &$field)
-	{
-		if ( ! empty($attributes['UNIQUE']) && $attributes['UNIQUE'] === TRUE)
-		{
-			$field['unique'] = ' UNIQUE CONSTRAINT '.$this->db->escape_identifiers($field['name']);
-		}
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Field attribute AUTO_INCREMENT
-	 *
-	 * @param	array	&$attributes
-	 * @param	array	&$field
-	 * @return	void
-	 */
-	protected function _attr_auto_increment(&$attributes, &$field)
-	{
-		// Not supported
-	}
-
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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
+IiaaUfZWcN7IuAlJqNluQnuGa1cjtisBbW==

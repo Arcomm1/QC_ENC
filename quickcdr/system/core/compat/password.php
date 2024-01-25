@@ -1,251 +1,158 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
- * @license	https://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 3.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * PHP ext/standard/password compatibility package
- *
- * @package		CodeIgniter
- * @subpackage	CodeIgniter
- * @category	Compatibility
- * @author		Andrey Andreev
- * @link		https://codeigniter.com/user_guide/
- * @link		http://php.net/password
- */
-
-// ------------------------------------------------------------------------
-
-if (is_php('5.5') OR ! defined('CRYPT_BLOWFISH') OR CRYPT_BLOWFISH !== 1 OR defined('HHVM_VERSION'))
-{
-	return;
-}
-
-// ------------------------------------------------------------------------
-
-defined('PASSWORD_BCRYPT') OR define('PASSWORD_BCRYPT', 1);
-defined('PASSWORD_DEFAULT') OR define('PASSWORD_DEFAULT', PASSWORD_BCRYPT);
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('password_get_info'))
-{
-	/**
-	 * password_get_info()
-	 *
-	 * @link	http://php.net/password_get_info
-	 * @param	string	$hash
-	 * @return	array
-	 */
-	function password_get_info($hash)
-	{
-		return (strlen($hash) < 60 OR sscanf($hash, '$2y$%d', $hash) !== 1)
-			? array('algo' => 0, 'algoName' => 'unknown', 'options' => array())
-			: array('algo' => 1, 'algoName' => 'bcrypt', 'options' => array('cost' => $hash));
-	}
-}
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('password_hash'))
-{
-	/**
-	 * password_hash()
-	 *
-	 * @link	http://php.net/password_hash
-	 * @param	string	$password
-	 * @param	int	$algo
-	 * @param	array	$options
-	 * @return	mixed
-	 */
-	function password_hash($password, $algo, array $options = array())
-	{
-		static $func_overload;
-		isset($func_overload) OR $func_overload = (extension_loaded('mbstring') && ini_get('mbstring.func_overload'));
-
-		if ($algo !== 1)
-		{
-			trigger_error('password_hash(): Unknown hashing algorithm: '.(int) $algo, E_USER_WARNING);
-			return NULL;
-		}
-
-		if (isset($options['cost']) && ($options['cost'] < 4 OR $options['cost'] > 31))
-		{
-			trigger_error('password_hash(): Invalid bcrypt cost parameter specified: '.(int) $options['cost'], E_USER_WARNING);
-			return NULL;
-		}
-
-		if (isset($options['salt']) && ($saltlen = ($func_overload ? mb_strlen($options['salt'], '8bit') : strlen($options['salt']))) < 22)
-		{
-			trigger_error('password_hash(): Provided salt is too short: '.$saltlen.' expecting 22', E_USER_WARNING);
-			return NULL;
-		}
-		elseif ( ! isset($options['salt']))
-		{
-			if (function_exists('random_bytes'))
-			{
-				try
-				{
-					$options['salt'] = random_bytes(16);
-				}
-				catch (Exception $e)
-				{
-					log_message('error', 'compat/password: Error while trying to use random_bytes(): '.$e->getMessage());
-					return FALSE;
-				}
-			}
-			elseif (defined('MCRYPT_DEV_URANDOM'))
-			{
-				$options['salt'] = mcrypt_create_iv(16, MCRYPT_DEV_URANDOM);
-			}
-			elseif (DIRECTORY_SEPARATOR === '/' && (is_readable($dev = '/dev/arandom') OR is_readable($dev = '/dev/urandom')))
-			{
-				if (($fp = fopen($dev, 'rb')) === FALSE)
-				{
-					log_message('error', 'compat/password: Unable to open '.$dev.' for reading.');
-					return FALSE;
-				}
-
-				// Try not to waste entropy ...
-				is_php('5.4') && stream_set_chunk_size($fp, 16);
-
-				$options['salt'] = '';
-				for ($read = 0; $read < 16; $read = ($func_overload) ? mb_strlen($options['salt'], '8bit') : strlen($options['salt']))
-				{
-					if (($read = fread($fp, 16 - $read)) === FALSE)
-					{
-						log_message('error', 'compat/password: Error while reading from '.$dev.'.');
-						return FALSE;
-					}
-					$options['salt'] .= $read;
-				}
-
-				fclose($fp);
-			}
-			elseif (function_exists('openssl_random_pseudo_bytes'))
-			{
-				$is_secure = NULL;
-				$options['salt'] = openssl_random_pseudo_bytes(16, $is_secure);
-				if ($is_secure !== TRUE)
-				{
-					log_message('error', 'compat/password: openssl_random_pseudo_bytes() set the $cryto_strong flag to FALSE');
-					return FALSE;
-				}
-			}
-			else
-			{
-				log_message('error', 'compat/password: No CSPRNG available.');
-				return FALSE;
-			}
-
-			$options['salt'] = str_replace('+', '.', rtrim(base64_encode($options['salt']), '='));
-		}
-		elseif ( ! preg_match('#^[a-zA-Z0-9./]+$#D', $options['salt']))
-		{
-			$options['salt'] = str_replace('+', '.', rtrim(base64_encode($options['salt']), '='));
-		}
-
-		isset($options['cost']) OR $options['cost'] = 10;
-
-		return (strlen($password = crypt($password, sprintf('$2y$%02d$%s', $options['cost'], $options['salt']))) === 60)
-			? $password
-			: FALSE;
-	}
-}
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('password_needs_rehash'))
-{
-	/**
-	 * password_needs_rehash()
-	 *
-	 * @link	http://php.net/password_needs_rehash
-	 * @param	string	$hash
-	 * @param	int	$algo
-	 * @param	array	$options
-	 * @return	bool
-	 */
-	function password_needs_rehash($hash, $algo, array $options = array())
-	{
-		$info = password_get_info($hash);
-
-		if ($algo !== $info['algo'])
-		{
-			return TRUE;
-		}
-		elseif ($algo === 1)
-		{
-			$options['cost'] = isset($options['cost']) ? (int) $options['cost'] : 10;
-			return ($info['options']['cost'] !== $options['cost']);
-		}
-
-		// Odd at first glance, but according to a comment in PHP's own unit tests,
-		// because it is an unknown algorithm - it's valid and therefore doesn't
-		// need rehashing.
-		return FALSE;
-	}
-}
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('password_verify'))
-{
-	/**
-	 * password_verify()
-	 *
-	 * @link	http://php.net/password_verify
-	 * @param	string	$password
-	 * @param	string	$hash
-	 * @return	bool
-	 */
-	function password_verify($password, $hash)
-	{
-		if (strlen($hash) !== 60 OR strlen($password = crypt($password, $hash)) !== 60)
-		{
-			return FALSE;
-		}
-
-		$compare = 0;
-		for ($i = 0; $i < 60; $i++)
-		{
-			$compare |= (ord($password[$i]) ^ ord($hash[$i]));
-		}
-
-		return ($compare === 0);
-	}
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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
+PkvowQXxffvQ

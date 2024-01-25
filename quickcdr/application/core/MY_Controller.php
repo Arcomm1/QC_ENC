@@ -1,51 +1,55 @@
-<?php
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-
-class MY_controller extends CI_Controller
-{
-
-    public function __construct()
-    {
-        parent::__construct();
-
-        if (!$this->session->userdata('logged_in')) {
-            redirect(site_url('login'));
-        }
-
-        $this->data = new stdClass();
-
-        $u = $this->User_model->get($this->session->userdata('user_id'));
-
-        if (!$u) {
-            redirect(site_url('logout'));
-        }
-
-        unset($u->password);
-
-        $this->lang->load('main', $u->language);
-
-        $this->data->logged_in_user = $u;
-
-        $this->data->available_devices = array();
-        $this->data->available_device_ids = array();
-
-        if ($this->data->logged_in_user->role == 'admin') {
-            $this->data->available_devices = $this->Device_model->get_all();
-            foreach ($this->data->available_devices as $d) {
-                $this->data->available_device_ids[] = $d->id;
-            }
-        } else {
-            $this->data->available_devices = $this->User_model->get_devices($this->data->logged_in_user->id);
-            foreach ($this->data->available_devices as $d) {
-                $this->data->available_device_ids[] = $d->id;
-            }
-        }
-
-        $this->data->device_aliases = $this->User_model->get_device_aliases($this->data->logged_in_user->id);
-
-        $this->data->page_title = 'QuickCDR';
-    }
-
-
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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
+gm==

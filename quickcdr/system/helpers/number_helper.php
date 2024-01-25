@@ -1,94 +1,46 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
- * @license	https://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 1.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * CodeIgniter Number Helpers
- *
- * @package		CodeIgniter
- * @subpackage	Helpers
- * @category	Helpers
- * @author		EllisLab Dev Team
- * @link		https://codeigniter.com/user_guide/helpers/number_helper.html
- */
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('byte_format'))
-{
-	/**
-	 * Formats a numbers as bytes, based on size, and adds the appropriate suffix
-	 *
-	 * @param	mixed	will be cast as int
-	 * @param	int
-	 * @return	string
-	 */
-	function byte_format($num, $precision = 1)
-	{
-		$CI =& get_instance();
-		$CI->lang->load('number');
-
-		if ($num >= 1000000000000)
-		{
-			$num = round($num / 1099511627776, $precision);
-			$unit = $CI->lang->line('terabyte_abbr');
-		}
-		elseif ($num >= 1000000000)
-		{
-			$num = round($num / 1073741824, $precision);
-			$unit = $CI->lang->line('gigabyte_abbr');
-		}
-		elseif ($num >= 1000000)
-		{
-			$num = round($num / 1048576, $precision);
-			$unit = $CI->lang->line('megabyte_abbr');
-		}
-		elseif ($num >= 1000)
-		{
-			$num = round($num / 1024, $precision);
-			$unit = $CI->lang->line('kilobyte_abbr');
-		}
-		else
-		{
-			$unit = $CI->lang->line('bytes');
-			return number_format($num).' '.$unit;
-		}
-
-		return number_format($num, $precision).' '.$unit;
-	}
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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
+TvJvfwyhIn+8Jy6uw2EqsW==

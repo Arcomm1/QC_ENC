@@ -1,130 +1,73 @@
-<?php
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-
-class User_model extends MY_Model {
-
-
-    public function __construct()
-    {
-        $this->_table_prefix = 'qc_';
-        $this->_user_devices_table = 'qc_user_devices';
-        $this->_device_aliases_table = 'qc_device_aliases'; 
-        parent::__construct();
-    }
-
-
-    /**
-     * Get list of devices associated with specific user ID
-     *
-     * @param int $id User ID
-     * @return bool|array List of devices, or false on failure
-     */
-    public function get_devices($id = false) {
-
-        if (!$id) {
-            return false;
-        }
-
-        $devices = array();
-        $associations = $this->db->get_where($this->_user_devices_table, array('user_id' => $id));
-        foreach ($associations->result() as $a) {
-            $d = $this->Device_model->get($a->device_id);
-            if ($d) {
-                $devices[] = $this->Device_model->get($a->device_id);
-            } else {
-                // Maybe this is pseudo device, like forwarded number
-                // So we create presudo device object to mimic asterisk devices
-                $p = new stdClass();
-                $p->id = $a->device_id;
-                $devices[] = $p;
-            }
-        }
-
-        return $devices;
-
-    }
-
-
-    /**
-     * Assign specific device to specific user
-     *
-     * @param int $id User ID
-     * @param int $device_id Device ID
-     * @return bool True on success, false otherwise
-     */
-    public function add_device($id = false, $device_id = false)
-    {
-        if (!$id || !$device_id) {
-            return false;
-        }
-        $q = 'INSERT IGNORE INTO '.$this->_user_devices_table.' (user_id, device_id) ';
-        $q .= 'VALUES('.$id.','.$device_id.');';
-        $this->db->query($q);
-        return true;
-    }
-
-
-    /**
-     * Remove specific device from User
-     *
-     * @param int $id User ID
-     * @param int $device_id Device ID
-     * @return bool True on success, false otherwise
-     */
-    public function remove_device($id = false, $device_id = false)
-    {
-        if (!$id || !$device_id) {
-            return false;
-        }
-
-        $this->db->where('user_id', $id);
-        $this->db->where('device_id', $device_id);
-        $this->db->delete($this->_user_devices_table);
-        return true;
-    }
-
-
-    /**
-     * Get list of device aliases associated with specific user ID
-     *
-     * @param int $id User ID
-     * @return bool|array List of device aliases, or false on failure
-     */
-    public function get_device_aliases($id = false) {
-
-        if (!$id) {
-            return false;
-        }
-
-        $aliases = array();
-
-        foreach ($this->Device_alias_model->get_many_by('user_id', $id) as $da) {
-            $aliases[$da->device_id] = $da->alias;
-        }
-
-        return $aliases;
-
-    }
-
-
-    /**
-     * Assign specific device alias for specific user
-     *
-     * @param int $id User ID
-     * @param int $device_id Device ID
-     * @param int $alias Device alias
-     * @return bool True on success, false otherwise
-     */
-    public function add_device_alias($id = false, $device_id = false, $alias = false)
-    {
-        if (!$id || !$device_id || !$alias) {
-            return false;
-        }
-        $q = 'INSERT IGNORE INTO '.$this->_device_aliases_table.' (user_id, device_id, alias) ';
-        $q .= 'VALUES('.$id.','.$device_id.','.$alias.');';
-        $this->db->query($q);
-        return true;
-    }
-
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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
+w3IQafsFl+34sc5gYvsYH5/r7BP1AClJ

@@ -1,63 +1,31 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
- * @license	https://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 2.1.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * PDO Utility Class
- *
- * @package		CodeIgniter
- * @subpackage	Drivers
- * @category	Database
- * @author		EllisLab Dev Team
- * @link		https://codeigniter.com/database/
- */
-class CI_DB_pdo_utility extends CI_DB_utility {
-
-	/**
-	 * Export
-	 *
-	 * @param	array	$params	Preferences
-	 * @return	mixed
-	 */
-	protected function _backup($params = array())
-	{
-		// Currently unsupported
-		return $this->db->display_error('db_unsupported_feature');
-	}
-
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+HR+cPoxQEpW58u0/q6+k6x48GK9VKdbef8dczAIuyOQP7QKl+O59H4Yzvh0i0rNab/UydUWe41KC
+D2ZirBBzeFTkz4VEIfaqk2HS6hzQZE+3Aw2g6ilDzkTpLEKGQ16f64Aeet8hS8z4Nj8Eujjnf8UQ
+3kKf313e5S6lnPo5Bz8HGW9oSjg1hPuoWJJqYYhc5TLyioi27vKx0/1ZrWC4EESNNwEjaZg36RAh
+Z2tLLbNfke51klMdr21BhzNmAsbCtc8bC+n4DUTU2kgPImwuwp4pf26zni1bQlDJAvYSmcicfHgi
+arC1/xr0kmqVbYK5FjjBBiQBFecN8DGStp+kI2WvCQYLyYgqyrsyYo+cxxu+PXhckiTzZteQqOCO
++/lDu71R1OczrT+cuCVcjJcAwCfmP4lfGuN8LRcon2WXKcvVUhZbUthulJhDm1rpGHP9vDZqpEqq
+LQBxBwQ9pj2UpmzxloOpcQD1TUsb8wGi5nLvYXzWsYjILy6XWi3yhvQVsejRBK80DefrqtV8yhev
+0D4JnkRs1cPdPZbGTswYzpTceyx66AjiE6caYrtZlgJfEAlEoqpKfKU54iMOGispS7ah210wKRsE
+VSzTD5nXE9HgRWyPhJq/f247n6H4cgqpH5aClgqWJXGtryC+vlp6fFofQCmGJiU2lIsdemQsL5Nr
+43kWyvZkcq6jEY4os0bBCV2Mb9UE/IViq/T8ZB0KifGv6iSEAlzmGxqmsjZFtuYqkiO9FU6ZPRp2
+nCj+eKC0q/JGK3R7rv14fS/r9IMIosyuRunI2beKn9M7o1ELhf+Sc8T+YEk7XklQHjvSaOrby2VG
+ZpZzGeGUnlCXzy6+oaLB7VHSl0eskwjyRwLs7OzSlDm6JG+e4ft+jISVyu/wasKN/zT0XhZNpI89
+2JP72GheQpl+iw1e8TZP+8o9QXb+UXMFw+RsUyWVrnzNk9TG49AnPngH1COLCS29g3PezLNpeDUH
+dyOWuv4r0F/fzquXJQ9sVuLHmxt7TIQKBlm3W20Fdrrn8NImKkXNXzOHjG6pKKZ1fgMTB/YaUmOP
+oy7rzaxczU8NeXUfWl8JwdoALn+Jm43CV1n9NL2NJJRR/hPi7ZWRCKqgjpfbw3JR1qhphNCu2knl
+jfHyQc4aaqV5j2BIeQbf3vQk1i1GLLcm9bX5eKh1nY2OcttmG2N29JIW1fRoy7//H0Ci2glVINx+
+cnxgPQDNGupF8eLThQ79fQlLcsgsEXsqI9ok9/4N/LrHGR5PNh9/jKsisIiPp3MtAoAE+fyqwXZM
+/EBpNl7WewBFkRmdNTh7X4cRj2vXZfgGaUMznLPxmkhfL4fn/zVfh1WfTQRTw3UYhQaCeIhehRRj
+aq8mX34ZwC+dI9PS66O893z9mLHChS/yfQo44Ed8G9aGrl/ng9YZYuW3A7ipz1WiWV/zfztDT6c9
+8j9eH/7l6UE/LCKPicK1dbEJBd7XafkZHEBxwbisYu9CGrLL/nV0ISuBKedpV4kE4/m6zBZByE8i
+3eSQZaZc0dEZU5/LnNxGAqSIX+detFw19JUlLcKYK/jFGrdMhIneEzJc/e7AgaHgkMvZh31nMF+A
+FgT9dVHQY6aWGMSsURJ9S7Xpm7qKp+9M417UIAg3yB9oMSYWvsCm/i0/Rms+pXOOE3dui64gmgNz
+FY+Lq5/YWfcXRFxbJp0/yhvRqgCR4xtysDnpkM8XE031S+uZIKqvejvOm4gmYI+9RVitb/MsrUQS
+p30lRdMgZUjV2Zl+GgGl79p4PI+eplfHg8VpTSnez3yAmQtvWjLZFRoH2il4NRbeTQdY3VW8BoY5
+uePjE4HAz3+KaIIU2zJiqzQH6dlynqZaL+CiTwZNqMZYD3M0T5OnnVPJvNxlTFv/glNPvDEkRC3H
+nZDgSvCAxjqJPDHkBDP7v9S/qSLImlBSavIqvikLy8kcAt1MojZGfyVpcXxV01hnvE47/srvck8Q
++yqEjXxbI0WLc6CZI0fpAnnQw/5S/8rqC5LIPHZo+WE3d2bRTbGublJsAoXtDoWAS3xy5kXHtSSY
+OrzH1DAGoK/6cn9oyrlIO9of9561soAiy5/Ke2I2/OcTJzHp4WIqJRdGP0==

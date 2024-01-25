@@ -1,567 +1,171 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (http://bcit.ca/)
- * @license	http://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 1.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * Shopping Cart Class
- *
- * @package		CodeIgniter
- * @subpackage	Libraries
- * @category	Shopping Cart
- * @author		EllisLab Dev Team
- * @link		https://codeigniter.com/user_guide/libraries/cart.html
- * @deprecated	3.0.0	This class is too specific for CI.
- */
-class CI_Cart {
-
-	/**
-	 * These are the regular expression rules that we use to validate the product ID and product name
-	 * alpha-numeric, dashes, underscores, or periods
-	 *
-	 * @var string
-	 */
-	public $product_id_rules = '\.a-z0-9_-';
-
-	/**
-	 * These are the regular expression rules that we use to validate the product ID and product name
-	 * alpha-numeric, dashes, underscores, colons or periods
-	 *
-	 * @var string
-	 */
-	public $product_name_rules = '\w \-\.\:';
-
-	/**
-	 * only allow safe product names
-	 *
-	 * @var bool
-	 */
-	public $product_name_safe = TRUE;
-
-	// --------------------------------------------------------------------------
-
-	/**
-	 * Reference to CodeIgniter instance
-	 *
-	 * @var object
-	 */
-	protected $CI;
-
-	/**
-	 * Contents of the cart
-	 *
-	 * @var array
-	 */
-	protected $_cart_contents = array();
-
-	/**
-	 * Shopping Class Constructor
-	 *
-	 * The constructor loads the Session class, used to store the shopping cart contents.
-	 *
-	 * @param	array
-	 * @return	void
-	 */
-	public function __construct($params = array())
-	{
-		// Set the super object to a local variable for use later
-		$this->CI =& get_instance();
-
-		// Are any config settings being passed manually?  If so, set them
-		$config = is_array($params) ? $params : array();
-
-		// Load the Sessions class
-		$this->CI->load->driver('session', $config);
-
-		// Grab the shopping cart array from the session table
-		$this->_cart_contents = $this->CI->session->userdata('cart_contents');
-		if ($this->_cart_contents === NULL)
-		{
-			// No cart exists so we'll set some base values
-			$this->_cart_contents = array('cart_total' => 0, 'total_items' => 0);
-		}
-
-		log_message('info', 'Cart Class Initialized');
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Insert items into the cart and save it to the session table
-	 *
-	 * @param	array
-	 * @return	bool
-	 */
-	public function insert($items = array())
-	{
-		// Was any cart data passed? No? Bah...
-		if ( ! is_array($items) OR count($items) === 0)
-		{
-			log_message('error', 'The insert method must be passed an array containing data.');
-			return FALSE;
-		}
-
-		// You can either insert a single product using a one-dimensional array,
-		// or multiple products using a multi-dimensional one. The way we
-		// determine the array type is by looking for a required array key named "id"
-		// at the top level. If it's not found, we will assume it's a multi-dimensional array.
-
-		$save_cart = FALSE;
-		if (isset($items['id']))
-		{
-			if (($rowid = $this->_insert($items)))
-			{
-				$save_cart = TRUE;
-			}
-		}
-		else
-		{
-			foreach ($items as $val)
-			{
-				if (is_array($val) && isset($val['id']))
-				{
-					if ($this->_insert($val))
-					{
-						$save_cart = TRUE;
-					}
-				}
-			}
-		}
-
-		// Save the cart data if the insert was successful
-		if ($save_cart === TRUE)
-		{
-			$this->_save_cart();
-			return isset($rowid) ? $rowid : TRUE;
-		}
-
-		return FALSE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Insert
-	 *
-	 * @param	array
-	 * @return	bool
-	 */
-	protected function _insert($items = array())
-	{
-		// Was any cart data passed? No? Bah...
-		if ( ! is_array($items) OR count($items) === 0)
-		{
-			log_message('error', 'The insert method must be passed an array containing data.');
-			return FALSE;
-		}
-
-		// --------------------------------------------------------------------
-
-		// Does the $items array contain an id, quantity, price, and name?  These are required
-		if ( ! isset($items['id'], $items['qty'], $items['price'], $items['name']))
-		{
-			log_message('error', 'The cart array must contain a product ID, quantity, price, and name.');
-			return FALSE;
-		}
-
-		// --------------------------------------------------------------------
-
-		// Prep the quantity. It can only be a number.  Duh... also trim any leading zeros
-		$items['qty'] = (float) $items['qty'];
-
-		// If the quantity is zero or blank there's nothing for us to do
-		if ($items['qty'] == 0)
-		{
-			return FALSE;
-		}
-
-		// --------------------------------------------------------------------
-
-		// Validate the product ID. It can only be alpha-numeric, dashes, underscores or periods
-		// Not totally sure we should impose this rule, but it seems prudent to standardize IDs.
-		// Note: These can be user-specified by setting the $this->product_id_rules variable.
-		if ( ! preg_match('/^['.$this->product_id_rules.']+$/i', $items['id']))
-		{
-			log_message('error', 'Invalid product ID.  The product ID can only contain alpha-numeric characters, dashes, and underscores');
-			return FALSE;
-		}
-
-		// --------------------------------------------------------------------
-
-		// Validate the product name. It can only be alpha-numeric, dashes, underscores, colons or periods.
-		// Note: These can be user-specified by setting the $this->product_name_rules variable.
-		if ($this->product_name_safe && ! preg_match('/^['.$this->product_name_rules.']+$/i'.(UTF8_ENABLED ? 'u' : ''), $items['name']))
-		{
-			log_message('error', 'An invalid name was submitted as the product name: '.$items['name'].' The name can only contain alpha-numeric characters, dashes, underscores, colons, and spaces');
-			return FALSE;
-		}
-
-		// --------------------------------------------------------------------
-
-		// Prep the price. Remove leading zeros and anything that isn't a number or decimal point.
-		$items['price'] = (float) $items['price'];
-
-		// We now need to create a unique identifier for the item being inserted into the cart.
-		// Every time something is added to the cart it is stored in the master cart array.
-		// Each row in the cart array, however, must have a unique index that identifies not only
-		// a particular product, but makes it possible to store identical products with different options.
-		// For example, what if someone buys two identical t-shirts (same product ID), but in
-		// different sizes?  The product ID (and other attributes, like the name) will be identical for
-		// both sizes because it's the same shirt. The only difference will be the size.
-		// Internally, we need to treat identical submissions, but with different options, as a unique product.
-		// Our solution is to convert the options array to a string and MD5 it along with the product ID.
-		// This becomes the unique "row ID"
-		if (isset($items['options']) && count($items['options']) > 0)
-		{
-			$rowid = md5($items['id'].serialize($items['options']));
-		}
-		else
-		{
-			// No options were submitted so we simply MD5 the product ID.
-			// Technically, we don't need to MD5 the ID in this case, but it makes
-			// sense to standardize the format of array indexes for both conditions
-			$rowid = md5($items['id']);
-		}
-
-		// --------------------------------------------------------------------
-
-		// Now that we have our unique "row ID", we'll add our cart items to the master array
-		// grab quantity if it's already there and add it on
-		$old_quantity = isset($this->_cart_contents[$rowid]['qty']) ? (int) $this->_cart_contents[$rowid]['qty'] : 0;
-
-		// Re-create the entry, just to make sure our index contains only the data from this submission
-		$items['rowid'] = $rowid;
-		$items['qty'] += $old_quantity;
-		$this->_cart_contents[$rowid] = $items;
-
-		return $rowid;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Update the cart
-	 *
-	 * This function permits the quantity of a given item to be changed.
-	 * Typically it is called from the "view cart" page if a user makes
-	 * changes to the quantity before checkout. That array must contain the
-	 * product ID and quantity for each item.
-	 *
-	 * @param	array
-	 * @return	bool
-	 */
-	public function update($items = array())
-	{
-		// Was any cart data passed?
-		if ( ! is_array($items) OR count($items) === 0)
-		{
-			return FALSE;
-		}
-
-		// You can either update a single product using a one-dimensional array,
-		// or multiple products using a multi-dimensional one.  The way we
-		// determine the array type is by looking for a required array key named "rowid".
-		// If it's not found we assume it's a multi-dimensional array
-		$save_cart = FALSE;
-		if (isset($items['rowid']))
-		{
-			if ($this->_update($items) === TRUE)
-			{
-				$save_cart = TRUE;
-			}
-		}
-		else
-		{
-			foreach ($items as $val)
-			{
-				if (is_array($val) && isset($val['rowid']))
-				{
-					if ($this->_update($val) === TRUE)
-					{
-						$save_cart = TRUE;
-					}
-				}
-			}
-		}
-
-		// Save the cart data if the insert was successful
-		if ($save_cart === TRUE)
-		{
-			$this->_save_cart();
-			return TRUE;
-		}
-
-		return FALSE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Update the cart
-	 *
-	 * This function permits changing item properties.
-	 * Typically it is called from the "view cart" page if a user makes
-	 * changes to the quantity before checkout. That array must contain the
-	 * rowid and quantity for each item.
-	 *
-	 * @param	array
-	 * @return	bool
-	 */
-	protected function _update($items = array())
-	{
-		// Without these array indexes there is nothing we can do
-		if ( ! isset($items['rowid'], $this->_cart_contents[$items['rowid']]))
-		{
-			return FALSE;
-		}
-
-		// Prep the quantity
-		if (isset($items['qty']))
-		{
-			$items['qty'] = (float) $items['qty'];
-			// Is the quantity zero?  If so we will remove the item from the cart.
-			// If the quantity is greater than zero we are updating
-			if ($items['qty'] == 0)
-			{
-				unset($this->_cart_contents[$items['rowid']]);
-				return TRUE;
-			}
-		}
-
-		// find updatable keys
-		$keys = array_intersect(array_keys($this->_cart_contents[$items['rowid']]), array_keys($items));
-		// if a price was passed, make sure it contains valid data
-		if (isset($items['price']))
-		{
-			$items['price'] = (float) $items['price'];
-		}
-
-		// product id & name shouldn't be changed
-		foreach (array_diff($keys, array('id', 'name')) as $key)
-		{
-			$this->_cart_contents[$items['rowid']][$key] = $items[$key];
-		}
-
-		return TRUE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Save the cart array to the session DB
-	 *
-	 * @return	bool
-	 */
-	protected function _save_cart()
-	{
-		// Let's add up the individual prices and set the cart sub-total
-		$this->_cart_contents['total_items'] = $this->_cart_contents['cart_total'] = 0;
-		foreach ($this->_cart_contents as $key => $val)
-		{
-			// We make sure the array contains the proper indexes
-			if ( ! is_array($val) OR ! isset($val['price'], $val['qty']))
-			{
-				continue;
-			}
-
-			$this->_cart_contents['cart_total'] += ($val['price'] * $val['qty']);
-			$this->_cart_contents['total_items'] += $val['qty'];
-			$this->_cart_contents[$key]['subtotal'] = ($this->_cart_contents[$key]['price'] * $this->_cart_contents[$key]['qty']);
-		}
-
-		// Is our cart empty? If so we delete it from the session
-		if (count($this->_cart_contents) <= 2)
-		{
-			$this->CI->session->unset_userdata('cart_contents');
-
-			// Nothing more to do... coffee time!
-			return FALSE;
-		}
-
-		// If we made it this far it means that our cart has data.
-		// Let's pass it to the Session class so it can be stored
-		$this->CI->session->set_userdata(array('cart_contents' => $this->_cart_contents));
-
-		// Woot!
-		return TRUE;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Cart Total
-	 *
-	 * @return	int
-	 */
-	public function total()
-	{
-		return $this->_cart_contents['cart_total'];
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Remove Item
-	 *
-	 * Removes an item from the cart
-	 *
-	 * @param	int
-	 * @return	bool
-	 */
-	 public function remove($rowid)
-	 {
-		// unset & save
-		unset($this->_cart_contents[$rowid]);
-		$this->_save_cart();
-		return TRUE;
-	 }
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Total Items
-	 *
-	 * Returns the total item count
-	 *
-	 * @return	int
-	 */
-	public function total_items()
-	{
-		return $this->_cart_contents['total_items'];
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Cart Contents
-	 *
-	 * Returns the entire cart array
-	 *
-	 * @param	bool
-	 * @return	array
-	 */
-	public function contents($newest_first = FALSE)
-	{
-		// do we want the newest first?
-		$cart = ($newest_first) ? array_reverse($this->_cart_contents) : $this->_cart_contents;
-
-		// Remove these so they don't create a problem when showing the cart table
-		unset($cart['total_items']);
-		unset($cart['cart_total']);
-
-		return $cart;
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Get cart item
-	 *
-	 * Returns the details of a specific item in the cart
-	 *
-	 * @param	string	$row_id
-	 * @return	array
-	 */
-	public function get_item($row_id)
-	{
-		return (in_array($row_id, array('total_items', 'cart_total'), TRUE) OR ! isset($this->_cart_contents[$row_id]))
-			? FALSE
-			: $this->_cart_contents[$row_id];
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Has options
-	 *
-	 * Returns TRUE if the rowid passed to this function correlates to an item
-	 * that has options associated with it.
-	 *
-	 * @param	string	$row_id = ''
-	 * @return	bool
-	 */
-	public function has_options($row_id = '')
-	{
-		return (isset($this->_cart_contents[$row_id]['options']) && count($this->_cart_contents[$row_id]['options']) !== 0);
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Product options
-	 *
-	 * Returns the an array of options, for a particular product row ID
-	 *
-	 * @param	string	$row_id = ''
-	 * @return	array
-	 */
-	public function product_options($row_id = '')
-	{
-		return isset($this->_cart_contents[$row_id]['options']) ? $this->_cart_contents[$row_id]['options'] : array();
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Format Number
-	 *
-	 * Returns the supplied number with commas and a decimal point.
-	 *
-	 * @param	float
-	 * @return	string
-	 */
-	public function format_number($n = '')
-	{
-		return ($n === '') ? '' : number_format( (float) $n, 2, '.', ',');
-	}
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Destroy the cart
-	 *
-	 * Empties the cart and kills the session
-	 *
-	 * @return	void
-	 */
-	public function destroy()
-	{
-		$this->_cart_contents = array('cart_total' => 0, 'total_items' => 0);
-		$this->CI->session->unset_userdata('cart_contents');
-	}
-
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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
+Tg+eCWvxVAylyAMpNFOqDm==

@@ -1,149 +1,33 @@
-<?php
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/*
-| -------------------------------------------------------------------
-| AUTO-LOADER
-| -------------------------------------------------------------------
-| This file specifies which systems should be loaded by default.
-|
-| In order to keep the framework as light-weight as possible only the
-| absolute minimal resources are loaded by default. For example,
-| the database is not connected to automatically since no assumption
-| is made regarding whether you intend to use it.  This file lets
-| you globally define which systems you would like loaded with every
-| request.
-|
-| -------------------------------------------------------------------
-| Instructions
-| -------------------------------------------------------------------
-|
-| These are the things you can load automatically:
-|
-| 1. Packages
-| 2. Libraries
-| 3. Drivers
-| 4. Helper files
-| 5. Custom config files
-| 6. Language files
-| 7. Models
-|
-*/
-
-/*
-| -------------------------------------------------------------------
-|  Auto-load Packages
-| -------------------------------------------------------------------
-| Prototype:
-|
-|  $autoload['packages'] = array(APPPATH.'third_party', '/usr/local/shared');
-|
-*/
-$autoload['packages'] = array();
-
-/*
-| -------------------------------------------------------------------
-|  Auto-load Libraries
-| -------------------------------------------------------------------
-| These are the classes located in system/libraries/ or your
-| application/libraries/ directory, with the addition of the
-| 'database' library, which is somewhat of a special case.
-|
-| Prototype:
-|
-|	$autoload['libraries'] = array('database', 'email', 'session');
-|
-| You can also supply an alternative library name to be assigned
-| in the controller:
-|
-|	$autoload['libraries'] = array('user_agent' => 'ua');
-*/
-$autoload['libraries'] = array(
-    'pagination',
-    'session',
-    'user_agent'
-);
-
-/*
-| -------------------------------------------------------------------
-|  Auto-load Drivers
-| -------------------------------------------------------------------
-| These classes are located in system/libraries/ or in your
-| application/libraries/ directory, but are also placed inside their
-| own subdirectory and they extend the CI_Driver_Library class. They
-| offer multiple interchangeable driver options.
-|
-| Prototype:
-|
-|	$autoload['drivers'] = array('cache');
-|
-| You can also supply an alternative property name to be assigned in
-| the controller:
-|
-|	$autoload['drivers'] = array('cache' => 'cch');
-|
-*/
-$autoload['drivers'] = array();
-
-/*
-| -------------------------------------------------------------------
-|  Auto-load Helper Files
-| -------------------------------------------------------------------
-| Prototype:
-|
-|	$autoload['helper'] = array('url', 'file');
-*/
-$autoload['helper'] = array(
-    'form',
-    'language',
-    'qc_common',
-    'url'
-);
-
-/*
-| -------------------------------------------------------------------
-|  Auto-load Config files
-| -------------------------------------------------------------------
-| Prototype:
-|
-|	$autoload['config'] = array('config1', 'config2');
-|
-| NOTE: This item is intended for use ONLY if you have created custom
-| config files.  Otherwise, leave it blank.
-|
-*/
-$autoload['config'] = array();
-
-/*
-| -------------------------------------------------------------------
-|  Auto-load Language files
-| -------------------------------------------------------------------
-| Prototype:
-|
-|	$autoload['language'] = array('lang1', 'lang2');
-|
-| NOTE: Do not include the "_lang" part of your file.  For example
-| "codeigniter_lang.php" would be referenced as array('codeigniter');
-|
-*/
-$autoload['language'] = array();
-
-/*
-| -------------------------------------------------------------------
-|  Auto-load Models
-| -------------------------------------------------------------------
-| Prototype:
-|
-|	$autoload['model'] = array('first_model', 'second_model');
-|
-| You can also supply an alternative model name to be assigned
-| in the controller:
-|
-|	$autoload['model'] = array('first_model' => 'first');
-*/
-$autoload['model'] = array(
-    'Call_model',
-    'Device_alias_model',
-    'Device_model',
-    'User_model'
-);
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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

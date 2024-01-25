@@ -1,287 +1,135 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
- * @license	https://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 1.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * CodeIgniter Inflector Helpers
- *
- * @package		CodeIgniter
- * @subpackage	Helpers
- * @category	Helpers
- * @author		EllisLab Dev Team
- * @link		https://codeigniter.com/user_guide/helpers/inflector_helper.html
- */
-
-// --------------------------------------------------------------------
-
-if ( ! function_exists('singular'))
-{
-	/**
-	 * Singular
-	 *
-	 * Takes a plural word and makes it singular
-	 *
-	 * @param	string	$str	Input string
-	 * @return	string
-	 */
-	function singular($str)
-	{
-		$result = strval($str);
-
-		if ( ! word_is_countable($result))
-		{
-			return $result;
-		}
-
-		$singular_rules = array(
-			'/(matr)ices$/'		=> '\1ix',
-			'/(vert|ind)ices$/'	=> '\1ex',
-			'/^(ox)en/'		=> '\1',
-			'/(alias)es$/'		=> '\1',
-			'/([octop|vir])i$/'	=> '\1us',
-			'/(cris|ax|test)es$/'	=> '\1is',
-			'/(shoe)s$/'		=> '\1',
-			'/(o)es$/'		=> '\1',
-			'/(bus|campus)es$/'	=> '\1',
-			'/([m|l])ice$/'		=> '\1ouse',
-			'/(x|ch|ss|sh)es$/'	=> '\1',
-			'/(m)ovies$/'		=> '\1\2ovie',
-			'/(s)eries$/'		=> '\1\2eries',
-			'/([^aeiouy]|qu)ies$/'	=> '\1y',
-			'/([lr])ves$/'		=> '\1f',
-			'/(tive)s$/'		=> '\1',
-			'/(hive)s$/'		=> '\1',
-			'/([^f])ves$/'		=> '\1fe',
-			'/(^analy)ses$/'	=> '\1sis',
-			'/((a)naly|(b)a|(d)iagno|(p)arenthe|(p)rogno|(s)ynop|(t)he)ses$/' => '\1\2sis',
-			'/([ti])a$/'		=> '\1um',
-			'/(p)eople$/'		=> '\1\2erson',
-			'/(m)en$/'		=> '\1an',
-			'/(s)tatuses$/'		=> '\1\2tatus',
-			'/(c)hildren$/'		=> '\1\2hild',
-			'/(n)ews$/'		=> '\1\2ews',
-			'/(quiz)zes$/'		=> '\1',
-			'/([^us])s$/'		=> '\1'
-		);
-
-		foreach ($singular_rules as $rule => $replacement)
-		{
-			if (preg_match($rule, $result))
-			{
-				$result = preg_replace($rule, $replacement, $result);
-				break;
-			}
-		}
-
-		return $result;
-	}
-}
-
-// --------------------------------------------------------------------
-
-if ( ! function_exists('plural'))
-{
-	/**
-	 * Plural
-	 *
-	 * Takes a singular word and makes it plural
-	 *
-	 * @param	string	$str	Input string
-	 * @return	string
-	 */
-	function plural($str)
-	{
-		$result = strval($str);
-
-		if ( ! word_is_countable($result))
-		{
-			return $result;
-		}
-
-		$plural_rules = array(
-			'/(quiz)$/'                => '\1zes',      // quizzes
-			'/^(ox)$/'                 => '\1\2en',     // ox
-			'/([m|l])ouse$/'           => '\1ice',      // mouse, louse
-			'/(matr|vert|ind)ix|ex$/'  => '\1ices',     // matrix, vertex, index
-			'/(x|ch|ss|sh)$/'          => '\1es',       // search, switch, fix, box, process, address
-			'/([^aeiouy]|qu)y$/'       => '\1ies',      // query, ability, agency
-			'/(hive)$/'                => '\1s',        // archive, hive
-			'/(?:([^f])fe|([lr])f)$/'  => '\1\2ves',    // half, safe, wife
-			'/sis$/'                   => 'ses',        // basis, diagnosis
-			'/([ti])um$/'              => '\1a',        // datum, medium
-			'/(p)erson$/'              => '\1eople',    // person, salesperson
-			'/(m)an$/'                 => '\1en',       // man, woman, spokesman
-			'/(c)hild$/'               => '\1hildren',  // child
-			'/(buffal|tomat)o$/'       => '\1\2oes',    // buffalo, tomato
-			'/(bu|campu)s$/'           => '\1\2ses',    // bus, campus
-			'/(alias|status|virus)$/'  => '\1es',       // alias
-			'/(octop)us$/'             => '\1i',        // octopus
-			'/(ax|cris|test)is$/'      => '\1es',       // axis, crisis
-			'/s$/'                     => 's',          // no change (compatibility)
-			'/$/'                      => 's',
-		);
-
-		foreach ($plural_rules as $rule => $replacement)
-		{
-			if (preg_match($rule, $result))
-			{
-				$result = preg_replace($rule, $replacement, $result);
-				break;
-			}
-		}
-
-		return $result;
-	}
-}
-
-// --------------------------------------------------------------------
-
-if ( ! function_exists('camelize'))
-{
-	/**
-	 * Camelize
-	 *
-	 * Takes multiple words separated by spaces or underscores and camelizes them
-	 *
-	 * @param	string	$str	Input string
-	 * @return	string
-	 */
-	function camelize($str)
-	{
-		return strtolower($str[0]).substr(str_replace(' ', '', ucwords(preg_replace('/[\s_]+/', ' ', $str))), 1);
-	}
-}
-
-// --------------------------------------------------------------------
-
-if ( ! function_exists('underscore'))
-{
-	/**
-	 * Underscore
-	 *
-	 * Takes multiple words separated by spaces and underscores them
-	 *
-	 * @param	string	$str	Input string
-	 * @return	string
-	 */
-	function underscore($str)
-	{
-		return preg_replace('/[\s]+/', '_', trim(MB_ENABLED ? mb_strtolower($str) : strtolower($str)));
-	}
-}
-
-// --------------------------------------------------------------------
-
-if ( ! function_exists('humanize'))
-{
-	/**
-	 * Humanize
-	 *
-	 * Takes multiple words separated by the separator and changes them to spaces
-	 *
-	 * @param	string	$str		Input string
-	 * @param 	string	$separator	Input separator
-	 * @return	string
-	 */
-	function humanize($str, $separator = '_')
-	{
-		return ucwords(preg_replace('/['.preg_quote($separator).']+/', ' ', trim(MB_ENABLED ? mb_strtolower($str) : strtolower($str))));
-	}
-}
-
-// --------------------------------------------------------------------
-
-if ( ! function_exists('word_is_countable'))
-{
-	/**
-	 * Checks if the given word has a plural version.
-	 *
-	 * @param	string	$word	Word to check
-	 * @return	bool
-	 */
-	function word_is_countable($word)
-	{
-		return ! in_array(
-			strtolower($word),
-			array(
-				'audio',
-				'bison',
-				'chassis',
-				'compensation',
-				'coreopsis',
-				'data',
-				'deer',
-				'education',
-				'emoji',
-				'equipment',
-				'fish',
-				'furniture',
-				'gold',
-				'information',
-				'knowledge',
-				'love',
-				'rain',
-				'money',
-				'moose',
-				'nutrition',
-				'offspring',
-				'plankton',
-				'pokemon',
-				'police',
-				'rice',
-				'series',
-				'sheep',
-				'species',
-				'swine',
-				'traffic',
-				'wheat'
-			)
-		);
-	}
-}
-
-// --------------------------------------------------------------------
-
-if ( ! function_exists('is_countable'))
-{
-	function is_countable($word)
-	{
-		trigger_error('is_countable() is a native PHP function since version 7.3.0; use word_is_countable() instead', E_USER_WARNING);
-		return word_is_countable($word);
-	}
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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
+YQVg+UOQhcV+HRG=

@@ -1,115 +1,55 @@
-<?php
-/**
- * CodeIgniter
- *
- * An open source application development framework for PHP
- *
- * This content is released under the MIT License (MIT)
- *
- * Copyright (c) 2014 - 2019, British Columbia Institute of Technology
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- * @package	CodeIgniter
- * @author	EllisLab Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc. (https://ellislab.com/)
- * @copyright	Copyright (c) 2014 - 2019, British Columbia Institute of Technology (https://bcit.ca/)
- * @license	https://opensource.org/licenses/MIT	MIT License
- * @link	https://codeigniter.com
- * @since	Version 1.0.0
- * @filesource
- */
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-/**
- * CodeIgniter Array Helpers
- *
- * @package		CodeIgniter
- * @subpackage	Helpers
- * @category	Helpers
- * @author		EllisLab Dev Team
- * @link		https://codeigniter.com/user_guide/helpers/array_helper.html
- */
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('element'))
-{
-	/**
-	 * Element
-	 *
-	 * Lets you determine whether an array index is set and whether it has a value.
-	 * If the element is empty it returns NULL (or whatever you specify as the default value.)
-	 *
-	 * @param	string
-	 * @param	array
-	 * @param	mixed
-	 * @return	mixed	depends on what the array contains
-	 */
-	function element($item, array $array, $default = NULL)
-	{
-		return array_key_exists($item, $array) ? $array[$item] : $default;
-	}
-}
-
-// ------------------------------------------------------------------------
-
-if ( ! function_exists('random_element'))
-{
-	/**
-	 * Random Element - Takes an array as input and returns a random element
-	 *
-	 * @param	array
-	 * @return	mixed	depends on what the array contains
-	 */
-	function random_element($array)
-	{
-		return is_array($array) ? $array[array_rand($array)] : $array;
-	}
-}
-
-// --------------------------------------------------------------------
-
-if ( ! function_exists('elements'))
-{
-	/**
-	 * Elements
-	 *
-	 * Returns only the array items specified. Will return a default value if
-	 * it is not set.
-	 *
-	 * @param	array
-	 * @param	array
-	 * @param	mixed
-	 * @return	mixed	depends on what the array contains
-	 */
-	function elements($items, array $array, $default = NULL)
-	{
-		$return = array();
-
-		is_array($items) OR $items = array($items);
-
-		foreach ($items as $item)
-		{
-			$return[$item] = array_key_exists($item, $array) ? $array[$item] : $default;
-		}
-
-		return $return;
-	}
-}
+<?php //002cd
+if(extension_loaded('ionCube Loader')){die('The file '.__FILE__." is corrupted.\n");}echo("\nScript error: the ".(($cli=(php_sapi_name()=='cli')) ?'ionCube':'<a href="https://www.ioncube.com">ionCube</a>')." Loader for PHP needs to be installed.\n\nThe ionCube Loader is the industry standard PHP extension for running protected PHP code,\nand can usually be added easily to a PHP installation.\n\nFor Loaders please visit".($cli?":\n\nhttps://get-loader.ioncube.com\n\nFor":' <a href="https://get-loader.ioncube.com">get-loader.ioncube.com</a> and for')." an instructional video please see".($cli?":\n\nhttp://ioncu.be/LV\n\n":' <a href="http://ioncu.be/LV">http://ioncu.be/LV</a> ')."\n\n");exit(199);
+?>
+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
